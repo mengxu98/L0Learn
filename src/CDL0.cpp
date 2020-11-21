@@ -2,7 +2,7 @@
 
 
 template <class T>
-CDL0<T>::CDL0(const T& Xi, const arma::vec& yi, const Params<T>& P) : CD<T>(Xi, yi, P){
+CDL0<T>::CDL0(const T& Xi, constEigen::VectorXd& yi, const Params<T>& P) : CD<T>(Xi, yi, P){
     this->thr2 = 2 * this->lambda0;
     this->thr = sqrt(this->thr2); 
     this->r = *P.r; 
@@ -21,7 +21,7 @@ FitResult<T> CDL0<T>::Fit() {
     bool FirstRestrictedPass = true;
     
     if (this->ActiveSet) {
-        this->Order.resize(std::min((int) (this->B.n_nonzero + this->ScreenSize + this->NoSelectK), (int)(this->p))); // std::min(1000,Order.size())
+        this->Order.resize(std::min((int) (this->B.nonZeros() + this->ScreenSize + this->NoSelectK), (int)(this->p))); // std::min(1000,Order.size())
     }
     
     bool ActiveSetInitial = this->ActiveSet;
@@ -85,7 +85,7 @@ template <class T>
 bool CDL0<T>::CWMinCheck() {
     // Get the Sc = FullOrder - Order
     std::vector<std::size_t> S;
-    for(arma::sp_mat::const_iterator it = this->B.begin(); it != this->B.end(); ++it) {
+    for(Eigen::SparseMatrix<double>::const_iterator it = this->B.begin(); it != this->B.end(); ++it) {
         S.push_back(it.row());
     }
     
@@ -105,5 +105,5 @@ bool CDL0<T>::CWMinCheck() {
     
 }
 
-template class CDL0<arma::mat>;
-template class CDL0<arma::sp_mat>;
+template class CDL0<Eigen::MatrixXd>;
+template class CDL0<Eigen::SparseMatrix<double>>;

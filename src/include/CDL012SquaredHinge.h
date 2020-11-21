@@ -1,6 +1,6 @@
 #ifndef CDL012SquaredHinge_H
 #define CDL012SquaredHinge_H
-#include "RcppArmadillo.h"
+#include <RcppEigen.h>
 #include "CD.h"
 #include "FitResult.h"
 #include "Params.h"
@@ -14,19 +14,19 @@ class CDL012SquaredHinge : public CD<T> {
         double qp2lamda2;
         double lambda1ol;
         // std::vector<double> * Xtr;
-        arma::vec onemyxb;
+       Eigen::VectorXd onemyxb;
         arma::uvec indices;
         T * Xy;
 
 
     public:
-        CDL012SquaredHinge(const T& Xi, const arma::vec& yi, const Params<T>& P);
+        CDL012SquaredHinge(const T& Xi, constEigen::VectorXd& yi, const Params<T>& P);
         
         //~CDL012SquaredHinge(){}
 
         FitResult<T> Fit() final;
 
-        inline double Objective(const arma::vec & r, const arma::sp_mat & B) final;
+        inline double Objective(constEigen::VectorXd & r, const Eigen::SparseMatrix<double> & B) final;
         
         inline double Objective() final;
         
@@ -49,7 +49,7 @@ class CDL012SquaredHinge : public CD<T> {
 template <class T>
 inline double CDL012SquaredHinge<T>::GetBiGrad(const std::size_t i){
     // Rcpp::Rcout << "Grad stuff: " << arma::sum(2 * onemyxb.elem(indices) % (- matrix_column_get(*Xy, i).elem(indices))  ) << "\n";
-    return arma::sum(2 * onemyxb.elem(indices) % (- matrix_column_get(*Xy, i).elem(indices)) ) + twolambda2 * this->B[i];
+    return arma::sum(2 * onemyxb.elem(indices) % (- matrix_column_get(*Xy, i).elem(indices)) ) + twolambda2 * this->B.coeffRef(i);
 }
 
 template <class T>
@@ -70,25 +70,25 @@ inline double CDL012SquaredHinge<T>::GetBiReg(const double Bi_step){
 template <class T>
 inline void CDL012SquaredHinge<T>::ApplyNewBi(const std::size_t i, const double Bi_old, const double Bi_new){
     onemyxb += (Bi_old - Bi_new) * matrix_column_get(*(this->Xy), i);
-    this->B[i] = Bi_new;
+    this->B.coeffRef(i) = Bi_new;
     indices = arma::find(onemyxb > 0);
 }
 
 template <class T>
 inline void CDL012SquaredHinge<T>::ApplyNewBiCWMinCheck(const std::size_t i, const double Bi_old, const double Bi_new){
     onemyxb += (Bi_old - Bi_new) * matrix_column_get(*(this->Xy), i);
-    this->B[i] = Bi_new;
+    this->B.coeffRef(i) = Bi_new;
     indices = arma::find(onemyxb > 0);
     this->Order.push_back(i);
 }
 
 template <class T>
-inline double CDL012SquaredHinge<T>::Objective(const arma::vec & onemyxb, const arma::sp_mat & B) {
+inline double CDL012SquaredHinge<T>::Objective(constEigen::VectorXd & onemyxb, const Eigen::SparseMatrix<double> & B) {
     
     auto l2norm = arma::norm(B, 2);
     arma::uvec indices = arma::find(onemyxb > 0);
     
-    return arma::sum(onemyxb.elem(indices) % onemyxb.elem(indices)) + this->lambda0 * B.n_nonzero + this->lambda1 * arma::norm(B, 1) + this->lambda2 * l2norm * l2norm;
+    return arma::sum(onemyxb.elem(indices) % onemyxb.elem(indices)) + this->lambda0 * B.nonZeros() + this->lambda1 * arma::norm(B, 1) + this->lambda2 * l2norm * l2norm;
 }
 
 
@@ -96,7 +96,7 @@ template <class T>
 inline double CDL012SquaredHinge<T>::Objective() {
     
     auto l2norm = arma::norm(this->B, 2);
-    return arma::sum(onemyxb.elem(indices) % onemyxb.elem(indices)) + this->lambda0 * this->B.n_nonzero + this->lambda1 * arma::norm(this->B, 1) + this->lambda2 * l2norm * l2norm;
+    return arma::sum(onemyxb.elem(indices) % onemyxb.elem(indices)) + this->lambda0 * this->B.nonZeros() + this->lambda1 * arma::norm(this->B, 1) + this->lambda2 * l2norm * l2norm;
 }
 
 #endif

@@ -1,7 +1,7 @@
 #include "Grid2D.h"
 
 template <class T>
-Grid2D<T>::Grid2D(const T& Xi, const arma::vec& yi, const GridParams<T>& PGi)
+Grid2D<T>::Grid2D(const T& Xi, constEigen::VectorXd& yi, const GridParams<T>& PGi)
 {
     // automatically selects lambda_0 (but assumes other lambdas are given in PG.P.ModelParams)
     X = &Xi;
@@ -29,12 +29,12 @@ Grid2D<T>::~Grid2D(){
 
 template <class T>
 std::vector< std::vector<std::unique_ptr<FitResult<T>> > > Grid2D<T>::Fit() {
-    arma::vec Xtrarma;
+   Eigen::VectorXd Xtrarma;
     
     if (PG.P.Specs.Logistic) {
         auto n = X->n_rows;
         double b0 = 0;
-        arma::vec ExpyXB =  arma::ones<arma::vec>(n);
+       Eigen::VectorXd ExpyXB =  arma::ones<Eigen::VectorXd>(n);
         if (PG.intercept) {
             for (std::size_t t = 0; t < 50; ++t) {
                 double partial_b0 = - arma::sum( *y / (1 + ExpyXB) );
@@ -55,7 +55,7 @@ std::vector< std::vector<std::unique_ptr<FitResult<T>> > > Grid2D<T>::Fit() {
     else if (PG.P.Specs.SquaredHinge) {
         auto n = X->n_rows;
         double b0 = 0;
-        arma::vec onemyxb =  arma::ones<arma::vec>(n);
+       Eigen::VectorXd onemyxb =  arma::ones<Eigen::VectorXd>(n);
         arma::uvec indices = arma::find(onemyxb > 0);
         if (PG.intercept){
             for (std::size_t t = 0; t < 50; ++t){
@@ -90,7 +90,7 @@ std::vector< std::vector<std::unique_ptr<FitResult<T>> > > Grid2D<T>::Fit() {
         index = 2;
     }
     
-    arma::vec Lambdas2 = arma::logspace(std::log10(Lambda2Min), std::log10(Lambda2Max), G_nrows);
+   Eigen::VectorXd Lambdas2 = arma::logspace(std::log10(Lambda2Min), std::log10(Lambda2Max), G_nrows);
     Lambdas2 = arma::flipud(Lambdas2);
     
     std::vector<double> Xtrvec = arma::conv_to< std::vector<double> >::from(Xtrarma);
@@ -122,5 +122,5 @@ std::vector< std::vector<std::unique_ptr<FitResult<T>> > > Grid2D<T>::Fit() {
     
 }
 
-template class Grid2D<arma::mat>;
-template class Grid2D<arma::sp_mat>;
+template class Grid2D<Eigen::MatrixXd>;
+template class Grid2D<Eigen::SparseMatrix<double>>;

@@ -1,6 +1,6 @@
 #ifndef CDL012_H
 #define CDL012_H
-#include "RcppArmadillo.h"
+#include <RcppEigen.h>
 #include "CD.h"
 #include "FitResult.h"
 #include "utils.h"
@@ -9,15 +9,15 @@ template <class T>
 class CDL012 : public CD<T> {
     private:
         double Onep2lamda2;
-        arma::vec r; //vector of residuals
+       Eigen::VectorXd r; //vector of residuals
         
     public:
-        CDL012(const T& Xi, const arma::vec& yi, const Params<T>& P);
+        CDL012(const T& Xi, const Eigen::VectorXd& yi, const Params<T>& P);
         //~CDL012(){}
 
         FitResult<T> Fit() final;
 
-        inline double Objective(const arma::vec & r, const arma::sp_mat & B) final;
+        inline double Objective(const Eigen::VectorXd & r, const Eigen::SparseVector<double> & B) final;
         
         inline double Objective() final;
 
@@ -62,25 +62,25 @@ inline double CDL012<T>::GetBiReg(const double nrb_Bi){
 template <class T>
 inline void CDL012<T>::ApplyNewBi(const std::size_t i, const double Bi_old, const double Bi_new){
     this->r += matrix_column_mult(*(this->X), i, Bi_old - Bi_new);
-    this->B[i] = Bi_new;
+    this->B.coeffRef(i) = Bi_new;
 }
 
 template <class T>
 inline void CDL012<T>::ApplyNewBiCWMinCheck(const std::size_t i, const double Bi_old, const double Bi_new){
     this->r += matrix_column_mult(*(this->X), i, Bi_old - Bi_new);
-    this->B[i] = Bi_new;
+    this->B.coeffRef(i) = Bi_new;
 }
 
 template <class T>
-inline double CDL012<T>::Objective(const arma::vec & r, const arma::sp_mat & B) { 
-    auto l2norm = arma::norm(B, 2);
-    return 0.5 * arma::dot(r, r) + this->lambda0 * B.n_nonzero + this->lambda1 * arma::norm(B, 1) + this->lambda2 * l2norm * l2norm;
+inline double CDL012<T>::Objective(const Eigen::VectorXd & r, const Eigen::SparseMatrix<double> & B) { 
+    auto l2norm = B.norm();
+    return 0.5 * r.dot(r) + this->lambda0 * B.nonZeros() + this->lambda1 * B.lpNorm() + this->lambda2 * l2norm * l2norm;
 }
 
 template <class T>
 inline double CDL012<T>::Objective() { 
-    auto l2norm = arma::norm(this->B, 2);
-    return 0.5 * arma::dot(this->r, this->r) + this->lambda0 * this->B.n_nonzero + this->lambda1 * arma::norm(this->B, 1) + this->lambda2 * l2norm * l2norm;
+    auto l2norm = this->B.norm();
+    return 0.5 * this->r.dot(this->r) + this->lambda0 * this->B.nonZeros() + this->lambda1 * this->B.lpNorm() + this->lambda2 * l2norm * l2norm;
 }
 
 #endif

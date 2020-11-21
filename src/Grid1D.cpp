@@ -1,7 +1,7 @@
 #include "Grid1D.h"
 
 template <class T>
-Grid1D<T>::Grid1D(const T& Xi, const arma::vec& yi, const GridParams<T>& PG) {
+Grid1D<T>::Grid1D(const T& Xi, constEigen::VectorXd& yi, const GridParams<T>& PG) {
     // automatically selects lambda_0 (but assumes other lambdas are given in PG.P.ModelParams)
     
     X = &Xi;
@@ -11,9 +11,9 @@ Grid1D<T>::Grid1D(const T& Xi, const arma::vec& yi, const GridParams<T>& PG) {
     ScaleDownFactor = PG.ScaleDownFactor;
     P = PG.P;
     P.Xtr = new std::vector<double>(X->n_cols); // needed! careful
-    P.ytX = new arma::rowvec(X->n_cols);
-    P.D = new std::map<std::size_t, arma::rowvec>();
-    P.r = new arma::vec(Xi.n_rows);
+    P.ytX = new Eigen::VectorXd(X->n_cols);
+    P.D = new std::map<std::size_t, Eigen::VectorXd>();
+    P.r = newEigen::VectorXd(Xi.n_rows);
     Xtr = P.Xtr;
     ytX = P.ytX;
     NoSelectK = P.NoSelectK;
@@ -63,7 +63,7 @@ std::vector<std::unique_ptr<FitResult<T>>> Grid1D<T>::Fit() {
         bool scaledown = false;
         
         double Lipconst;
-        arma::vec Xtrarma;
+       Eigen::VectorXd Xtrarma;
         if (P.Specs.Logistic) {
             if (!XtrAvailable) {
                 Xtrarma = 0.5 * arma::abs(y->t() * *X).t();
@@ -149,7 +149,7 @@ std::vector<std::unique_ptr<FitResult<T>>> Grid1D<T>::Fit() {
                 
                 if (i > 0) {
                     std::vector<std::size_t> Sp;
-                    arma::sp_mat::const_iterator it;
+                    Eigen::SparseMatrix<double>::const_iterator it;
                     for(it = prevresult->B.begin(); it != prevresult->B.end(); ++it) {
                         Sp.push_back(it.row());
                     }
@@ -192,14 +192,14 @@ std::vector<std::unique_ptr<FitResult<T>>> Grid1D<T>::Fit() {
                 scaledown = false;
                 if (i >= 1) {
                     std::vector<std::size_t> Spold;
-                    arma::sp_mat::const_iterator itold;
+                    Eigen::SparseMatrix<double>::const_iterator itold;
                     
                     for(itold = prevresult->B.begin(); itold != prevresult->B.end(); ++itold) {
                         Spold.push_back(itold.row());
                     }
                     
                     std::vector<std::size_t> Spnew;
-                    arma::sp_mat::const_iterator itnew;
+                    Eigen::SparseMatrix<double>::const_iterator itnew;
                     
                     for(itnew = result->B.begin(); itnew != result->B.end(); ++itnew) {
                         Spnew.push_back(itnew.row());
@@ -223,7 +223,7 @@ std::vector<std::unique_ptr<FitResult<T>>> Grid1D<T>::Fit() {
                 G.push_back(std::move(result));
                 
                 
-                if(G.back()->B.n_nonzero >= StopNum) {
+                if(G.back()->B.nonZeros() >= StopNum) {
                     break;
                 }
                 //result->B.t().print();
@@ -247,5 +247,5 @@ std::vector<std::unique_ptr<FitResult<T>>> Grid1D<T>::Fit() {
 }
 
 
-template class Grid1D<arma::mat>;
-template class Grid1D<arma::sp_mat>;
+template class Grid1D<Eigen::MatrixXd>;
+template class Grid1D<Eigen::SparseMatrix<double>>;

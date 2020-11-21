@@ -1,7 +1,7 @@
 #ifndef CD_H
 #define CD_H
 #include <algorithm>
-#include "RcppArmadillo.h"
+#include <RcppEigen.h>
 #include "FitResult.h"
 #include "Params.h"
 #include "Model.h"
@@ -16,8 +16,8 @@ class CDBase {
         std::size_t n, p;
         std::size_t Iter;
         
-        arma::sp_mat B;
-        arma::sp_mat Bprev;
+        Eigen::SparseVector<double> B;
+        Eigen::SparseVector<double> Bprev;
         
         std::size_t SameSuppCounter = 0;
         double objective;
@@ -43,25 +43,25 @@ class CDBase {
 
     public:
         const T * X;
-        const arma::vec * y;
+        const Eigen::VectorXd * y;
         std::vector<double> ModelParams;
 
         char CyclingOrder;
         std::size_t MaxIters;
         std::size_t CurrentIters; // current number of iterations - maintained by Converged()
         double Tol;
-        arma::vec Lows;
-        arma::vec Highs;
+        Eigen::VectorXd Lows;
+        Eigen::VectorXd Highs;
         bool ActiveSet;
         std::size_t ActiveSetNum;
         bool Stabilized = false;
 
 
-        CDBase(const T& Xi, const arma::vec& yi, const Params<T>& P);
+        CDBase(const T& Xi, const Eigen::VectorXd& yi, const Params<T>& P);
 
         virtual ~CDBase(){}
 
-        virtual inline double Objective(const arma::vec &, const arma::sp_mat &)=0;
+        virtual inline double Objective(const Eigen::VectorXd &, const Eigen::SparseMatrix<double> &)=0;
         
         virtual inline double Objective()=0;
 
@@ -79,7 +79,7 @@ class CDBase {
         
         virtual inline void ApplyNewBiCWMinCheck(const std::size_t i, const double old_Bi, const double new_Bi)=0;
 
-        static CDBase * make_CD(const T& Xi, const arma::vec& yi, const Params<T>& P);
+        static CDBase * make_CD(const T& Xi, const Eigen::VectorXd& yi, const Params<T>& P);
 
 };
 
@@ -90,7 +90,7 @@ class CD : public CDBase<T>{
         std::vector<std::size_t> Range1p;
         
     public:
-        CD(const T& Xi, const arma::vec& yi, const Params<T>& P);
+        CD(const T& Xi, const Eigen::VectorXd& yi, const Params<T>& P);
         
         virtual ~CD(){};
         
@@ -100,7 +100,7 @@ class CD : public CDBase<T>{
         
         void SupportStabilized();
         
-        void UpdateSparse_b0(arma::vec &r);
+        void UpdateSparse_b0(Eigen::VectorXd &r);
         
         bool Converged();
         
@@ -116,7 +116,7 @@ class CDSwaps : public CDBase<T> {
 
     public:
         
-        CDSwaps(const T& Xi, const arma::vec& yi, const Params<T>& P);
+        CDSwaps(const T& Xi, const Eigen::VectorXd& yi, const Params<T>& P);
         
         virtual ~CDSwaps(){};
         

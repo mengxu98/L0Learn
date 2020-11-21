@@ -3,7 +3,7 @@
 #include <tuple>
 #include <set>
 #include <memory>
-#include "RcppArmadillo.h"
+#include <RcppEigen.h>
 #include "GridParams.h"
 #include "FitResult.h"
 #include "Grid1D.h"
@@ -14,9 +14,9 @@ template <class T>
 class Grid {
     private:
         T Xscaled;
-        arma::vec yscaled;
-        arma::vec BetaMultiplier;
-        arma::vec meanX;
+       Eigen::VectorXd yscaled;
+       Eigen::VectorXd BetaMultiplier;
+       Eigen::VectorXd meanX;
         double meany;
         double scaley;
 
@@ -27,11 +27,11 @@ class Grid {
         std::vector< std::vector<double> > Lambda0;
         std::vector<double> Lambda12;
         std::vector< std::vector<std::size_t> > NnzCount;
-        std::vector< std::vector<arma::sp_mat> > Solutions;
+        std::vector< std::vector<Eigen::SparseMatrix<double>> > Solutions;
         std::vector< std::vector<double> >Intercepts;
         std::vector< std::vector<bool> > Converged;
 
-        Grid(const T& X, const arma::vec& y, const GridParams<T>& PG);
+        Grid(const T& X, constEigen::VectorXd& y, const GridParams<T>& PG);
         //~Grid();
 
         void Fit();

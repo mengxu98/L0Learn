@@ -1,7 +1,7 @@
 #ifndef GRID2D_H
 #define GRID2D_H
 #include <memory>
-#include "RcppArmadillo.h"
+#include <RcppEigen.h>
 #include "GridParams.h"
 #include "Params.h"
 #include "FitResult.h"
@@ -16,7 +16,7 @@ class Grid2D
         std::size_t G_ncols;
         GridParams<T> PG;
         const T * X;
-        const arma::vec * y;
+        constEigen::VectorXd * y;
         std::size_t p;
         std::vector<std::vector<std::unique_ptr<FitResult<T>>>> G; 
         // each inner vector corresponds to a single lambda_1/lambda_2
@@ -29,7 +29,7 @@ class Grid2D
 
 
     public:
-        Grid2D(const T& Xi, const arma::vec& yi, const GridParams<T>& PGi);
+        Grid2D(const T& Xi, constEigen::VectorXd& yi, const GridParams<T>& PGi);
         ~Grid2D();
         std::vector<std::vector<std::unique_ptr<FitResult<T>>>> Fit();
 

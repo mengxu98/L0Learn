@@ -3,7 +3,7 @@
 
 #include <vector>
 #include <string>
-#include "RcppArmadillo.h"
+#include <RcppEigen.h>
 #include "Grid.h"
 #include "GridParams.h"
 #include "FitResult.h"
@@ -18,22 +18,22 @@ inline void to_arma_error() {
 // 
 // 
 // template <typename T>
-// Rcpp::List _L0LearnFit(const T& X, const arma::vec& y, const std::string Loss, const std::string Penalty,
+// Rcpp::List _L0LearnFit(const T& X, constEigen::VectorXd& y, const std::string Loss, const std::string Penalty,
 //                        const std::string Algorithm, const std::size_t NnzStopNum, const std::size_t G_ncols,
 //                        const std::size_t G_nrows, const double Lambda2Max, const double Lambda2Min,
 //                        const bool PartialSort, const std::size_t MaxIters, const double Tol, const bool ActiveSet,
 //                        const std::size_t ActiveSetNum, const std::size_t MaxNumSwaps, const double ScaleDownFactor,
 //                        std::size_t ScreenSize, const bool LambdaU, const std::vector< std::vector<double> > Lambdas,
-//                        const std::size_t ExcludeFirstK, const bool Intercept, const arma::vec &Lows, const arma::vec &Highs);
+//                        const std::size_t ExcludeFirstK, const bool Intercept, constEigen::VectorXd &Lows, constEigen::VectorXd &Highs);
 // 
 // template <typename T>
-// Rcpp::List _L0LearnCV(const T& X, const arma::vec& y, const std::string Loss, const std::string Penalty,
+// Rcpp::List _L0LearnCV(const T& X, constEigen::VectorXd& y, const std::string Loss, const std::string Penalty,
 //                       const std::string Algorithm, const std::size_t NnzStopNum, const std::size_t G_ncols,
 //                       const std::size_t G_nrows, const double Lambda2Max, const double Lambda2Min,
 //                       const bool PartialSort, const std::size_t MaxIters, const double Tol, const bool ActiveSet,
 //                       const std::size_t ActiveSetNum, const std::size_t MaxNumSwaps, const double ScaleDownFactor,
 //                       std::size_t ScreenSize, const bool LambdaU, const std::vector< std::vector<double> > Lambdas,
 //                       const std::size_t nfolds, const double seed, const std::size_t ExcludeFirstK,
-//                       const bool Intercept, const arma::vec &Lows, const arma::vec &Highs);
+//                       const bool Intercept, constEigen::VectorXd &Lows, constEigen::VectorXd &Highs);
 
 #endif // RINTERFACE_H

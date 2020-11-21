@@ -2,7 +2,7 @@
 
 
 template <class T>
-CDL012<T>::CDL012(const T& Xi, const arma::vec& yi, const Params<T>& P) : CD<T>(Xi, yi, P) {
+CDL012<T>::CDL012(const T& Xi, constEigen::VectorXd& yi, const Params<T>& P) : CD<T>(Xi, yi, P) {
     Onep2lamda2 = 1 + 2 * this->lambda2; 
     
     this->thr2 = 2 * this->lambda0 / Onep2lamda2;
@@ -21,7 +21,7 @@ FitResult<T> CDL012<T>::Fit() {
     std::vector<std::size_t> FullOrder = this->Order;
     bool FirstRestrictedPass = true;
     if (this->ActiveSet) {
-        this->Order.resize(std::min((int) (this->B.n_nonzero + this->ScreenSize + this->NoSelectK), (int)(this->p))); // std::min(1000,Order.size())
+        this->Order.resize(std::min((int) (this->B.nonZeros() + this->ScreenSize + this->NoSelectK), (int)(this->p))); // std::min(1000,Order.size())
     }
     
     bool ActiveSetInitial = this->ActiveSet;
@@ -83,7 +83,7 @@ template <class T>
 bool CDL012<T>::CWMinCheck(){
     // Get the Sc = FullOrder - Order
     std::vector<std::size_t> S;
-    for(arma::sp_mat::const_iterator it = this->B.begin(); it != this->B.end(); ++it) {
+    for(Eigen::SparseMatrix<double>::const_iterator it = this->B.begin(); it != this->B.end(); ++it) {
         S.push_back(it.row());
     }
     
@@ -103,5 +103,5 @@ bool CDL012<T>::CWMinCheck(){
     
 }
 
-template class CDL012<arma::mat>;
-template class CDL012<arma::sp_mat>;
+template class CDL012<Eigen::MatrixXd>;
+template class CDL012<Eigen::SparseMatrix<double>>;

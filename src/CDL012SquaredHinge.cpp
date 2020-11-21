@@ -1,7 +1,7 @@
 #include "CDL012SquaredHinge.h"
 
 template <class T>
-CDL012SquaredHinge<T>::CDL012SquaredHinge(const T& Xi, const arma::vec& yi, const Params<T>& P) : CD<T>(Xi, yi, P) {
+CDL012SquaredHinge<T>::CDL012SquaredHinge(const T& Xi, constEigen::VectorXd& yi, const Params<T>& P) : CD<T>(Xi, yi, P) {
     twolambda2 = 2 * this->lambda2;
     qp2lamda2 = (LipschitzConst + twolambda2); // this is the univariate lipschitz const of the differentiable objective
     this->thr2 = (2 * this->lambda0) / qp2lamda2;
@@ -27,7 +27,7 @@ FitResult<T> CDL012SquaredHinge<T>::Fit() {
     
     
     std::vector<std::size_t> FullOrder = this->Order; // never used in LR
-    this->Order.resize(std::min((int) (this->B.n_nonzero + this->ScreenSize + this->NoSelectK), (int)(this->p)));
+    this->Order.resize(std::min((int) (this->B.nonZeros() + this->ScreenSize + this->NoSelectK), (int)(this->p)));
     
     
     for (auto t = 0; t < this->MaxIters; ++t) {
@@ -71,7 +71,7 @@ FitResult<T> CDL012SquaredHinge<T>::Fit() {
 template <class T>
 bool CDL012SquaredHinge<T>::CWMinCheck(){
     std::vector<std::size_t> S;
-    for(arma::sp_mat::const_iterator it = this->B.begin(); it != this->B.end(); ++it)
+    for(Eigen::SparseMatrix<double>::const_iterator it = this->B.begin(); it != this->B.end(); ++it)
         S.push_back(it.row());
     
     std::vector<std::size_t> Sc;
@@ -90,6 +90,6 @@ bool CDL012SquaredHinge<T>::CWMinCheck(){
     return Cwmin;
 }
 
-template class CDL012SquaredHinge<arma::mat>;
-template class CDL012SquaredHinge<arma::sp_mat>;
+template class CDL012SquaredHinge<Eigen::MatrixXd>;
+template class CDL012SquaredHinge<Eigen::SparseMatrix<double>>;
 

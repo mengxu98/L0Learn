@@ -14,7 +14,7 @@ License: MIT + file LICENSE
 Depends: R (>= 3.3.0)
 SystemRequirements: C++11
 Imports: Rcpp (>= 0.12.13), Matrix, methods, ggplot2, reshape2, MASS
-LinkingTo: Rcpp, RcppArmadillo
+LinkingTo: Rcpp, RcppEigen
 RoxygenNote: 7.1.1
 Suggests: 
     knitr,

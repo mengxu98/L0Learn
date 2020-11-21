@@ -1,9 +1,9 @@
 #include "Normalize.h"
 
-std::tuple<arma::sp_mat, double> DeNormalize(arma::sp_mat & B_scaled, 
-                                             arma::vec & BetaMultiplier, 
-                                             arma::vec & meanX, double meany) {
-    arma::sp_mat B_unscaled = B_scaled % BetaMultiplier;
+std::tuple<Eigen::SparseMatrix<double>, double> DeNormalize(Eigen::SparseMatrix<double> & B_scaled, 
+                                            Eigen::VectorXd & BetaMultiplier, 
+                                            Eigen::VectorXd & meanX, double meany) {
+    Eigen::SparseMatrix<double> B_unscaled = B_scaled % BetaMultiplier;
     double intercept = meany - arma::dot(B_unscaled, meanX);
     // Matrix Type, Intercept
     // Dense,            True -> meanX = colMeans(X)

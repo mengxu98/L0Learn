@@ -1,6 +1,6 @@
 #ifndef CDL012Logistic_H
 #define CDL012Logistic_H
-#include "RcppArmadillo.h"
+#include <RcppEigen.h>
 #include "CD.h"
 #include "FitResult.h"
 #include "Params.h"
@@ -13,16 +13,16 @@ class CDL012Logistic : public CD<T> {
         double twolambda2;
         double qp2lamda2;
         double lambda1ol;
-        arma::vec ExpyXB;
+       Eigen::VectorXd ExpyXB;
         // std::vector<double> * Xtr;
         T * Xy;
         
     public:
-        CDL012Logistic(const T& Xi, const arma::vec& yi, const Params<T>& P);
+        CDL012Logistic(const T& Xi, constEigen::VectorXd& yi, const Params<T>& P);
         //~CDL012Logistic(){}
         FitResult<T> Fit() final;
 
-        inline double Objective(const arma::vec & r, const arma::sp_mat & B) final;
+        inline double Objective(constEigen::VectorXd & r, const Eigen::SparseMatrix<double> & B) final;
         
         inline double Objective() final;
         
@@ -44,7 +44,7 @@ class CDL012Logistic : public CD<T> {
 
 template <class T>
 inline double CDL012Logistic<T>::GetBiGrad(const std::size_t i){
-    return -arma::sum( matrix_column_get(*(this->Xy), i) / (1 + ExpyXB) ) + twolambda2 * this->B[i];
+    return -arma::sum( matrix_column_get(*(this->Xy), i) / (1 + ExpyXB) ) + twolambda2 * this->B.coeffRef(i);
 }
 
 template <class T>
@@ -65,7 +65,7 @@ inline double CDL012Logistic<T>::GetBiReg(const double Bi_step){
 template <class T>
 inline void CDL012Logistic<T>::ApplyNewBi(const std::size_t i, const double old_Bi, const double new_Bi){
     ExpyXB %= arma::exp( (new_Bi - old_Bi) * matrix_column_get(*(this->Xy), i));
-    this->B[i] = new_Bi;
+    this->B.coeffRef(i) = new_Bi;
 }
 
 template <class T>
@@ -73,22 +73,22 @@ inline void CDL012Logistic<T>::ApplyNewBiCWMinCheck(const std::size_t i,
                                                     const double old_Bi,
                                                     const double new_Bi){
     ExpyXB %= arma::exp( (new_Bi - old_Bi) * matrix_column_get(*(this->Xy), i));
-    this->B[i] = new_Bi;
+    this->B.coeffRef(i) = new_Bi;
     this->Order.push_back(i);
 }
 
 template <class T>
-inline double CDL012Logistic<T>::Objective(const arma::vec & expyXB, const arma::sp_mat & B) {  // hint inline
+inline double CDL012Logistic<T>::Objective(constEigen::VectorXd & expyXB, const Eigen::SparseMatrix<double> & B) {  // hint inline
     const auto l2norm = arma::norm(B, 2);
     // arma::sum(arma::log(1 + 1 / expyXB)) is the negative log-likelihood
-    return arma::sum(arma::log(1 + 1 / expyXB)) + this->lambda0 * B.n_nonzero + this->lambda1 * arma::norm(B, 1) + this->lambda2 * l2norm * l2norm;
+    return arma::sum(arma::log(1 + 1 / expyXB)) + this->lambda0 * B.nonZeros() + this->lambda1 * arma::norm(B, 1) + this->lambda2 * l2norm * l2norm;
 }
 
 template <class T>
 inline double CDL012Logistic<T>::Objective() {  // hint inline
     const auto l2norm = arma::norm(this->B, 2);
     // arma::sum(arma::log(1 + 1 / ExpyXB)) is the negative log-likelihood
-    return arma::sum(arma::log(1 + 1 / ExpyXB)) + this->lambda0 * this->B.n_nonzero + this->lambda1 * arma::norm(this->B, 1) + this->lambda2 * l2norm * l2norm;
+    return arma::sum(arma::log(1 + 1 / ExpyXB)) + this->lambda0 * this->B.nonZeros() + this->lambda1 * arma::norm(this->B, 1) + this->lambda2 * l2norm * l2norm;
 }
 
 

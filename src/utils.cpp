@@ -1,6 +1,6 @@
 #include "utils.h"
 
-// arma::sp_mat clamp_by_vector(arma::sp_mat B, const arma::vec lows, const arma::vec highs){
+// Eigen::SparseMatrix<double> clamp_by_vector(Eigen::SparseMatrix<double> B, constEigen::VectorXd lows, constEigen::VectorXd highs){
 //     // Somehow this implementation fails unexpectedly.
 //     // Calling
 //     // >fit <- L0Learn.fit(X, y, algorithm = "CDPSI", lows=0)
@@ -34,94 +34,47 @@
 //     return B;
 // }
 
-arma::sp_mat clamp_by_vector(arma::sp_mat B, const arma::vec lows, const arma::vec highs){
+Eigen::SparseMatrix<double> clamp_by_vector(Eigen::SparseMatrix<double> B, constEigen::VectorXd lows, constEigen::VectorXd highs){
     // See above implementation without filter for error.
-    auto begin = B.begin();
-    auto end = B.end();
-    
-    std::vector<std::size_t> inds;
-    for (; begin != end; ++begin)
-        inds.push_back(begin.row());
-
-    auto n = B.size();
-    inds.erase(std::remove_if(inds.begin(),
-                              inds.end(),
-                              [n](size_t x){return (x > n) && (x < 0);}),
-                              inds.end());
-    for (auto& it : inds) { 
-        double B_item = B(it, 0);
-        double low = lows(it);
-        double high = highs(it);
-        B(it, 0) = clamp(B_item, low, high);
-    }
-    
-    return B;
+    return B.max(lows).min(highs);
 }
 
-arma::rowvec matrix_normalize(arma::sp_mat &mat_norm){
-    auto p = mat_norm.n_cols;
-    arma::rowvec scaleX = arma::zeros<arma::rowvec>(p); // will contain the l2norm of every col
+Eigen::RowVectorXd matrix_normalize(Eigen::SparseMatrix<double> &mat_norm){
+    Eigen::VectorXd scaleX = mat_norm.colwise().norm();
     
-    for (auto col = 0; col < p; col++){
-        double l2norm = arma::norm(matrix_column_get(mat_norm, col), 2);
-        scaleX(col) = l2norm;
-    }
-    
-    scaleX.replace(0, -1);
-    
-    for (auto col = 0; col < p; col++){
-        arma::sp_mat::col_iterator begin = mat_norm.begin_col(col);
-        arma::sp_mat::col_iterator end = mat_norm.end_col(col);
-        for (; begin != end; ++begin)
-            (*begin) = (*begin)/scaleX(col);
-    }
-    
-    if (mat_norm.has_nan())
-        mat_norm.replace(arma::datum::nan, 0);  // can handle numerical instabilities.
+    mat_norm.colwise().normalize(); // Inplace Operations
     
     return scaleX;
 }
 
-arma::rowvec matrix_normalize(arma::mat& mat_norm){
-
-    auto p = mat_norm.n_cols;
-    arma::rowvec scaleX = arma::zeros<arma::rowvec>(p); // will contain the l2norm of every col
+Eigen::RowVectorXd matrix_normalize(Eigen::MatrixXd& mat_norm){
+    Eigen::VectorXd scaleX = mat_norm.colwise().norm();
     
-    for (auto col = 0; col < p; col++) {
-        double l2norm = arma::norm(matrix_column_get(mat_norm, col), 2);
-        scaleX(col) = l2norm;
-    }
-    
-    scaleX.replace(0, -1);
-    mat_norm.each_row() /= scaleX;
-    
-    if (mat_norm.has_nan()){
-        mat_norm.replace(arma::datum::nan, 0); // can handle numerical instabilities.   
-    }
+    mat_norm.colwise().normalize(); // Inplace Operations
     
     return scaleX;
 }
 
-std::tuple<arma::mat, arma::rowvec> matrix_center(const arma::mat& X, bool intercept){
+std::tuple<Eigen::MatrixXd, Eigen::RowVectorXd> matrix_center(const Eigen::MatrixXd& X, bool intercept){
     auto p = X.n_cols;
-    arma::rowvec meanX;
-    arma::mat X_normalized;
+    Eigen::RowVectorXd meanX;
+    Eigen::MatrixXd X_normalized;
     
     if (intercept){
-        meanX = arma::mean(X, 0);
-        X_normalized = X.each_row() - meanX;
+        meanX = X.colwise().mean();
+        X_normalized = X.rowwise() - meanX;
     } else {
-        meanX = arma::zeros<arma::rowvec>(p);
-        X_normalized = arma::mat(X);
+        meanX = Eigen::RowVectorXd::Zero(p);
+        X_normalized = Eigen::MatrixXd(X);
     }
     
     return std::make_tuple(X_normalized, meanX);
 }
 
-std::tuple<arma::sp_mat, arma::rowvec> matrix_center(const arma::sp_mat& X,
+std::tuple<Eigen::SparseMatrix<double>, Eigen::RowVectorXd> matrix_center(const Eigen::SparseMatrix<double>& X,
                                                      bool intercept){
     auto p = X.n_cols;
-    arma::rowvec meanX = arma::zeros<arma::rowvec>(p);
-    arma::sp_mat X_normalized = arma::sp_mat(X);
+    Eigen::RowVectorXd meanX = meanX = Eigen::RowVectorXd::Zero(p);;
+    Eigen::SparseMatrix<double> X_normalized = Eigen::SparseMatrix<double>(X);
     return std::make_tuple(X_normalized, meanX);
 }

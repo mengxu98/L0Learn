@@ -1,7 +1,7 @@
 #include "CD.h"
 
 template <class T>
-CDBase<T>::CDBase(const T& Xi, const arma::vec& yi, const Params<T>& P) :
+CDBase<T>::CDBase(const T& Xi, const Eigen::VectorXd& yi, const Params<T>& P) :
     ModelParams{P.ModelParams}, CyclingOrder{P.CyclingOrder}, MaxIters{P.MaxIters},
     Tol{P.Tol}, ActiveSet{P.ActiveSet}, ActiveSetNum{P.ActiveSetNum} 
 {
@@ -16,32 +16,48 @@ CDBase<T>::CDBase(const T& Xi, const arma::vec& yi, const Params<T>& P) :
     this->Xtr = P.Xtr; 
     this->Iter = P.Iter;
         
-    this->isSparse = std::is_same<T,arma::sp_mat>::value;
+    this->isSparse = std::is_same<T,Eigen::SparseMatrix<double>>::value;
     
     this->b0 = P.b0;
     this->intercept = P.intercept;
     this->X = &Xi;
     this->y = &yi;
     
-    this->n = X->n_rows;
-    this->p = X->n_cols;
+    this->n = X->rows();
+    this->p = X->cols();
     
     if (P.Init == 'u') {
         this->B = *(P.InitialSol);
     } else if (P.Init == 'r') {
-        arma::urowvec row_indices = arma::randi<arma::urowvec>(P.RandomStartSize, arma::distr_param(0, p - 1));
-        row_indices = arma::unique(row_indices);
-        auto rsize = row_indices.n_cols;
+        // Random values from [-1, 1]
+        Eigen::RowVectorXd row_indices_d = Eigen::RowVectorXd::Random(P.RandomStartSize);
+        row_indices_d = row_indices_d.array() + 1.0;
+        row_indices_d = row_indices_d.array() * (p-1)/2; // Random values from [0, p-1]
         
-        arma::umat indices(2, rsize);
-        indices.row(0) = row_indices;
-        indices.row(1) = arma::zeros<arma::urowvec>(rsize);
+        Eigen::RowVectorXi row_indices = row_indices_d.cast <std::size_t> ();
+        // Random Integers values from {0, 1, 2, ..., p-1}
+      
+        std::vector<std::size_t> unique_row_indices(P.RandomStartSize);
+        for (auto i = 0; i < p-1; ++i){
+          unique_row_indices.push_back(row_indices(i));
+        }
+        std::sort(unique_row_indices.begin(), unique_row_indices.end());
+        std::unique(unique_row_indices.begin(), unique_row_indices.end());
+        // Sorted Unique List of Indicies
         
-        arma::vec values = arma::randu<arma::vec>(rsize) * 2 - 1; // uniform(-1,1)
+        std::vector<Eigen::Triplet<double>> tripletList;
         
-        this->B = arma::sp_mat(false, indices, values, p, 1, false, false);
+        auto nnz = unique_row_indices.size();
+        tripletList.reserve(nnz);
+        
+        Eigen::RowVectorXd random_values = Eigen::VectorXd::Random(nnz);
+        Eigen::SparseVector<double> B(p);
+        for (auto i=0; i < nnz; ++i){
+            B.coeffRef(i) = random_values(i);
+        }
+        this->B = B;
     } else {
-        this->B = arma::sp_mat(p, 1); // Initialized to zeros
+        this->B = Eigen::SparseVector<double>(p); // Initialized to zeros
     }
     
     if (CyclingOrder == 'u') {
@@ -59,11 +75,11 @@ CDBase<T>::CDBase(const T& Xi, const arma::vec& yi, const Params<T>& P) :
 }
 
 template <class T>
-void CD<T>::UpdateSparse_b0(arma::vec& r){
-    // Only run for regression when T is arma::sp_mat and intercept is True.
+void CD<T>::UpdateSparse_b0(Eigen::VectorXd& r){
+    // Only run for regression when T is Eigen::SparseMatrix<double> and intercept is True.
     // r is this->r on outer scope;                                                           
-    const double new_b0 = arma::mean(r);
-    r -= new_b0;
+    const double new_b0 = r.mean();
+    r = r.array() - new_b0;
     this->b0 += new_b0;
 }
 
@@ -83,7 +99,7 @@ void CD<T>::UpdateBi(const std::size_t i){
   
     (*this->Xtr)[i] = std::abs(grd_Bi);  // Store absolute value of gradient for later steps
     
-    const double old_Bi = this->B[i]; // copy of old Bi to adjust residuals if Bi updates
+    const double old_Bi = this->B.coeffRef(i); // copy of old Bi to adjust residuals if Bi updates
     
     const double nrb_Bi = this->GetBiValue(old_Bi, grd_Bi); 
     // Update Step for New No regularization No Bounds Bi:
@@ -187,29 +203,33 @@ void CD<T>::SupportStabilized() {
     
     bool SameSupp = true;
     
-    if (this->Bprev.n_nonzero != this->B.n_nonzero) {
+    if (this->Bprev.nonZeros() != this->B.nonZeros()) {
         SameSupp = false;
     } else {  // same number of nnz and Supp is sorted
-        arma::sp_mat::const_iterator i1;
-        arma::sp_mat::const_iterator i2;
-        for(i1 = this->B.begin(), i2 = this->Bprev.begin(); i1 != this->B.end(); ++i1, ++i2) {
-            if (i1.row() != i2.row()) {
-                SameSupp = false;
-                break;
-            }
-        }
+      
+      std::vector<std::size_t> B_indicies;
+      std::vector<std::size_t> B_prev_indicies;
+      
+      for (Eigen::SparseVector<double>::InnerIterator it(this->B); it; ++it)
+          B_indicies.push_back(it.index());
+      
+      for (Eigen::SparseVector<double>::InnerIterator it(this->Bprev); it; ++it)
+          B_prev_indicies.push_back(it.index());
+        
+      std::sort(B_indicies.begin(), B_indicies.end());
+      std::sort(B_prev_indicies.begin(), B_prev_indicies.end());
+      
+      SameSupp = B_indicies == B_prev_indicies;
     }
     
     if (SameSupp) {
         this->SameSuppCounter += 1;
         
         if (this->SameSuppCounter == this->ActiveSetNum - 1) {
-            std::vector<std::size_t> NewOrder(this->B.n_nonzero);
+            std::vector<std::size_t> NewOrder(this->B.nonZeros());
             
-            arma::sp_mat::const_iterator i;
-            for(i = this->B.begin(); i != this->B.end(); ++i) {
-                NewOrder.push_back(i.row());
-            }
+            for (Eigen::SparseVector<double>::InnerIterator it(this->B); it; ++it)
+                NewOrder.push_back(it.index());
             
             std::sort(NewOrder.begin(), NewOrder.end(), [this](std::size_t i, std::size_t j) {return this->Order[i] <  this->Order[j] ;});
             
@@ -226,26 +246,26 @@ void CD<T>::SupportStabilized() {
     
 }
 
-template class CDBase<arma::mat>;
-template class CDBase<arma::sp_mat>;
+template class CDBase<Eigen::MatrixXd>;
+template class CDBase<Eigen::SparseMatrix<double>>;
 
 
 template <class T>
-CD<T>::CD(const T& Xi, const arma::vec& yi, const Params<T>& P) : CDBase<T>(Xi, yi, P){
+CD<T>::CD(const T& Xi, const Eigen::VectorXd& yi, const Params<T>& P) : CDBase<T>(Xi, yi, P){
     Range1p.resize(this->p);
     std::iota(std::begin(Range1p), std::end(Range1p), 0);
     ScreenSize = P.ScreenSize;
 }
 
-template class CD<arma::mat>;
-template class CD<arma::sp_mat>;
+template class CD<Eigen::MatrixXd>;
+template class CD<Eigen::SparseMatrix<double>>;
 
 
 template <class T>
-CDSwaps<T>::CDSwaps(const T& Xi, const arma::vec& yi, const Params<T>& Pi) : CDBase<T>(Xi, yi, Pi){
+CDSwaps<T>::CDSwaps(const T& Xi, const Eigen::VectorXd& yi, const Params<T>& Pi) : CDBase<T>(Xi, yi, Pi){
     MaxNumSwaps = Pi.MaxNumSwaps;
     P = Pi;
 }
 
-template class CDSwaps<arma::mat>;
-template class CDSwaps<arma::sp_mat>;
+template class CDSwaps<Eigen::MatrixXd>;
+template class CDSwaps<Eigen::SparseMatrix<double>>;

@@ -2,7 +2,7 @@
 
 // Assumes PG.P.Specs have been already set
 template <class T>
-Grid<T>::Grid(const T& X, const arma::vec& y, const GridParams<T>& PGi) {
+Grid<T>::Grid(const T& X, constEigen::VectorXd& y, const GridParams<T>& PGi) {
     PG = PGi;
     
     std::tie(Xscaled, BetaMultiplier, meanX, meany, scaley) = Normalize(X, 
@@ -27,7 +27,7 @@ void Grid<T>::Fit() {
     
     Lambda0 = std::vector< std::vector<double> >(G.size());
     NnzCount = std::vector< std::vector<std::size_t> >(G.size());
-    Solutions = std::vector< std::vector<arma::sp_mat> >(G.size());
+    Solutions = std::vector< std::vector<Eigen::SparseMatrix<double>> >(G.size());
     Intercepts = std::vector< std::vector<double> >(G.size());
     Converged = std::vector< std::vector<bool> >(G.size());
 
@@ -41,7 +41,7 @@ void Grid<T>::Fit() {
         for (auto &g : G[i]) {
             Lambda0[i].push_back(g->ModelParams[0]);
             
-            NnzCount[i].push_back(g->B.n_nonzero);
+            NnzCount[i].push_back(g->B.nonZeros());
             
             if (g->IterNum != PG.P.MaxIters){
                 Converged[i].push_back(true);
@@ -49,7 +49,7 @@ void Grid<T>::Fit() {
                 Converged[i].push_back(false);
             }
             
-            arma::sp_mat B_unscaled;
+            Eigen::SparseMatrix<double> B_unscaled;
             double b0;
             
             std::tie(B_unscaled, b0) = DeNormalize(g->B, BetaMultiplier, meanX, meany);
@@ -64,5 +64,5 @@ void Grid<T>::Fit() {
     }
 }
 
-template class Grid<arma::mat>;
-template class Grid<arma::sp_mat>;
+template class Grid<Eigen::MatrixXd>;
+template class Grid<Eigen::SparseMatrix<double>>;

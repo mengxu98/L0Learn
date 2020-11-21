@@ -1,7 +1,7 @@
 #include "CDL012LogisticSwaps.h"
 
 template <class T>
-CDL012LogisticSwaps<T>::CDL012LogisticSwaps(const T& Xi, const arma::vec& yi, const Params<T>& Pi) : CDSwaps<T>(Xi, yi, Pi) {
+CDL012LogisticSwaps<T>::CDL012LogisticSwaps(const T& Xi, constEigen::VectorXd& yi, const Params<T>& Pi) : CDSwaps<T>(Xi, yi, Pi) {
     twolambda2 = 2 * this->lambda2;
     qp2lamda2 = (LipschitzConst + twolambda2); // this is the univariate lipschitz const of the differentiable objective
     this->thr2 = (2 * this->lambda0) / qp2lamda2;
@@ -30,10 +30,10 @@ FitResult<T> CDL012LogisticSwaps<T>::Fit() {
     
     for (std::size_t t = 0; t < this->MaxNumSwaps; ++t) {
         
-        arma::sp_mat::const_iterator start = this->B.begin();
-        arma::sp_mat::const_iterator end   = this->B.end();
+        Eigen::SparseMatrix<double>::const_iterator start = this->B.begin();
+        Eigen::SparseMatrix<double>::const_iterator end   = this->B.end();
         std::vector<std::size_t> NnzIndices;
-        for(arma::sp_mat::const_iterator it = start; it != end; ++it) {
+        for(Eigen::SparseMatrix<double>::const_iterator it = start; it != end; ++it) {
             if (it.row() >= this->NoSelectK) {
                 NnzIndices.push_back(it.row());
             }
@@ -45,12 +45,12 @@ FitResult<T> CDL012LogisticSwaps<T>::Fit() {
         foundbetter = false;
         
         for (auto& j : NnzIndices) {
-            // Set B[j] = 0
-            arma::vec ExpyXBnoj = ExpyXB % arma::exp( - this->B[j] * matrix_column_get(*(this->Xy), j));
+            // Set B.coeffRef(j) = 0
+           Eigen::VectorXd ExpyXBnoj = ExpyXB % arma::exp( - this->B.coeffRef(j) * matrix_column_get(*(this->Xy), j));
             
-            arma::rowvec gradient;
+            Eigen::VectorXd gradient;
             { // Scope used to automatically de-allocate objects
-            arma::vec temp_gradient = 1 + ExpyXBnoj;
+           Eigen::VectorXd temp_gradient = 1 + ExpyXBnoj;
             T divided_matrix = matrix_vector_divide(*Xy, temp_gradient);
             gradient = - matrix_column_sums(divided_matrix);   
             }
@@ -62,16 +62,16 @@ FitResult<T> CDL012LogisticSwaps<T>::Fit() {
             for(std::size_t ll = 0; ll < std::min(100, (int) this->p); ++ll) {
                 std::size_t i = indices(ll);
                 
-                if(this->B[i] == 0 && i >= this->NoSelectK) {
-                    // Do not swap B[i] if i between 0 and NoSelectK;
+                if(this->B.coeffRef(i) == 0 && i >= this->NoSelectK) {
+                    // Do not swap B.coeffRef(i) if i between 0 and NoSelectK;
                     
-                    arma::vec ExpyXBnoji = ExpyXBnoj;
+                   Eigen::VectorXd ExpyXBnoji = ExpyXBnoj;
                     
                     double Biold = 0;
                     double partial_i = gradient[i];
                     bool converged = false;
                     
-                    arma::sp_mat Btemp = this->B;
+                    Eigen::SparseMatrix<double> Btemp = this->B;
                     Btemp[j] = 0;
                     double ObjTemp = Objective(ExpyXBnoji, Btemp);
                     std::size_t innerindex = 0;
@@ -115,7 +115,7 @@ FitResult<T> CDL012LogisticSwaps<T>::Fit() {
                 }
                 
                 if (foundbetter_i) {
-                    this->B[j] = 0;
+                    this->B.coeffRef(j) = 0.0;
                     this->B[maxindex] = Bmaxindex;
                     this->P.InitialSol = &(this->B);
                     
@@ -151,5 +151,5 @@ FitResult<T> CDL012LogisticSwaps<T>::Fit() {
     return result;
 }
 
-template class CDL012LogisticSwaps<arma::mat>;
-template class CDL012LogisticSwaps<arma::sp_mat>;
+template class CDL012LogisticSwaps<Eigen::MatrixXd>;
+template class CDL012LogisticSwaps<Eigen::SparseMatrix<double>>;

@@ -2,27 +2,27 @@
 #define NORMALIZE_H
 
 #include <tuple>
-#include "RcppArmadillo.h"
+#include <RcppEigen.h>
 #include "utils.h"
 
-std::tuple<arma::sp_mat, double> DeNormalize(arma::sp_mat & B_scaled, 
-                                             arma::vec & BetaMultiplier, 
-                                             arma::vec & meanX, double meany);
+std::tuple<Eigen::SparseMatrix<double>, double> DeNormalize(Eigen::SparseMatrix<double> & B_scaled, 
+                                            Eigen::VectorXd & BetaMultiplier, 
+                                            Eigen::VectorXd & meanX, double meany);
 
 template <typename T>
-std::tuple<T, arma::vec, arma::vec, double, double>  Normalize(const T& X, 
-                                                       const arma::vec& y, 
-                                                       arma::vec & y_normalized, 
+std::tuple<T,Eigen::VectorXd,Eigen::VectorXd, double, double>  Normalize(const T& X, 
+                                                       constEigen::VectorXd& y, 
+                                                      Eigen::VectorXd & y_normalized, 
                                                        bool Normalizey, 
                                                        bool intercept) {
     
     auto martrix_center_return = matrix_center(X, intercept);
     T X_normalized = std::get<0>(martrix_center_return);
-    arma::rowvec meanX = std::get<1>(martrix_center_return);
+    Eigen::VectorXd meanX = std::get<1>(martrix_center_return);
     
-    arma::rowvec scaleX = matrix_normalize(X_normalized);
+    Eigen::VectorXd scaleX = matrix_normalize(X_normalized);
     
-    arma::vec BetaMultiplier;
+   Eigen::VectorXd BetaMultiplier;
     double meany = 0;
     double scaley;
     if (Normalizey) {
