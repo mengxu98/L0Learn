@@ -37,22 +37,6 @@ R_matrix_rows_get_sparse <- function(mat, rows) {
     .Call('_L0Learn_R_matrix_rows_get_sparse', PACKAGE = 'L0Learn', mat, rows)
 }
 
-R_matrix_vector_schur_product_dense <- function(mat, u) {
-    .Call('_L0Learn_R_matrix_vector_schur_product_dense', PACKAGE = 'L0Learn', mat, u)
-}
-
-R_matrix_vector_schur_product_sparse <- function(mat, u) {
-    .Call('_L0Learn_R_matrix_vector_schur_product_sparse', PACKAGE = 'L0Learn', mat, u)
-}
-
-R_matrix_vector_divide_dense <- function(mat, u) {
-    .Call('_L0Learn_R_matrix_vector_divide_dense', PACKAGE = 'L0Learn', mat, u)
-}
-
-R_matrix_vector_divide_sparse <- function(mat, u) {
-    .Call('_L0Learn_R_matrix_vector_divide_sparse', PACKAGE = 'L0Learn', mat, u)
-}
-
 R_matrix_column_sums_dense <- function(mat) {
     .Call('_L0Learn_R_matrix_column_sums_dense', PACKAGE = 'L0Learn', mat)
 }
@@ -69,14 +53,6 @@ R_matrix_column_dot_sparse <- function(mat, col, u) {
     .Call('_L0Learn_R_matrix_column_dot_sparse', PACKAGE = 'L0Learn', mat, col, u)
 }
 
-R_matrix_column_mult_dense <- function(mat, col, u) {
-    .Call('_L0Learn_R_matrix_column_mult_dense', PACKAGE = 'L0Learn', mat, col, u)
-}
-
-R_matrix_column_mult_sparse <- function(mat, col, u) {
-    .Call('_L0Learn_R_matrix_column_mult_sparse', PACKAGE = 'L0Learn', mat, col, u)
-}
-
 R_matrix_normalize_dense <- function(mat_norm) {
     .Call('_L0Learn_R_matrix_normalize_dense', PACKAGE = 'L0Learn', mat_norm)
 }
@@ -91,5 +67,21 @@ R_matrix_center_dense <- function(mat, X_normalized, intercept) {
 
 R_matrix_center_sparse <- function(mat, X_normalized, intercept) {
     .Call('_L0Learn_R_matrix_center_sparse', PACKAGE = 'L0Learn', mat, X_normalized, intercept)
+}
+
+R_vector_subset <- function(x, indicies) {
+    .Call('_L0Learn_R_vector_subset', PACKAGE = 'L0Learn', x, indicies)
+}
+
+R_arg_sort <- function(x) {
+    .Call('_L0Learn_R_arg_sort', PACKAGE = 'L0Learn', x)
+}
+
+R_make_predicitions_dense <- function(X, B, b0) {
+    .Call('_L0Learn_R_make_predicitions_dense', PACKAGE = 'L0Learn', X, B, b0)
+}
+
+R_make_predicitions_sparse <- function(X, B, b0) {
+    .Call('_L0Learn_R_make_predicitions_sparse', PACKAGE = 'L0Learn', X, B, b0)
 }
 

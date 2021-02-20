@@ -3,30 +3,35 @@ library("L0Learn")
 
 L0LEARNVERSIONDATAFOLDER = normalizePath(file.path("~/Documents/GitHub/L0LearnVersionData"))
 version_to_load_from="1.2.0"
+time_version_to_load_from = paste('no_grid_time', version_to_load_from, sep='_')
+
 current_version = packageVersion("L0Learn")
 
 # Assert data is available to test from
-if (!(version_to_load_from %in% dir(L0LEARNVERSIONDATAFOLDER))){
+if (!(time_version_to_load_from %in% dir(L0LEARNVERSIONDATAFOLDER))){
     print(L0LEARNVERSIONDATAFOLDER)
-    stop("'version_to_load_from' must exist in 'L0LEARNVERSIONDATAFOLDER'")
+    stop("'time_version_to_load_from' must exist in 'L0LEARNVERSIONDATAFOLDER'")
 }
 
 
 test_that("All versions run as expected", {
     # Load data object
-    data <- readRDS(file.path(L0LEARNVERSIONDATAFOLDER, version_to_load_from, "data.rData"))
+    data_large <- readRDS(file.path(L0LEARNVERSIONDATAFOLDER, time_version_to_load_from, "data_large.rData"))
+    data_medium <- readRDS(file.path(L0LEARNVERSIONDATAFOLDER, time_version_to_load_from, "data_medium.rData"))
+    data_small <- readRDS(file.path(L0LEARNVERSIONDATAFOLDER, time_version_to_load_from, "data_small.rData"))
+    
+    # L0_grid <- readRDS(file.path(L0LEARNVERSIONDATAFOLDER, time_version_to_load_from, "L0_grid.rData"))
+    # L012_grid <- readRDS(file.path(L0LEARNVERSIONDATAFOLDER, time_version_to_load_from, "L012_grid.rData"))
+    # 
+    # L0_nGamma = 1
+    # L012_nGamma <- length(L012_grid)
     
     # Load tests:
-    tests <- readLines(file.path(L0LEARNVERSIONDATAFOLDER, 
-                       version_to_load_from, 'tests.txt'))
-    smalldata <- readRDS(file.path(L0LEARNVERSIONDATAFOLDER,
-                                   version_to_load_from, "smalldata.rData"))
-    L0_grid <- readRDS(file.path(L0LEARNVERSIONDATAFOLDER,
-                                 version_to_load_from, "L0_grid.rData"))
-    L0_nGamma <- 1
-    L012_grid <- readRDS(file.path(L0LEARNVERSIONDATAFOLDER,
-                                 version_to_load_from, "L012_grid.rData"))
-    L012_nGamma <- length(L012_grid)
+    benchmark_tests <- readLines(file.path(L0LEARNVERSIONDATAFOLDER, 
+                                           time_version_to_load_from, 'benchmark_tests.txt'))
+    
+    grid_finding_runs <- readLines(file.path(L0LEARNVERSIONDATAFOLDER, 
+                                             time_version_to_load_from, 'grid_finding_runs.txt'))
     
     # Run tests:
     for (i in 1:length(tests)){
@@ -38,10 +43,14 @@ test_that("All versions run as expected", {
         } else {
             tolerance = 1e-9
         }
-        fit <- eval(parse(text=tests[[i]]))
-        version_fit <- readRDS(file.path(L0LEARNVERSIONDATAFOLDER,
-                                         version_to_load_from,
-                                         paste(i, ".rData", sep='')))
-        expect_equal(fit, version_fit$fit, info=i, tolerance=tolerance)
+        version_time <- readRDS(file.path(L0LEARNVERSIONDATAFOLDER,
+                                          time_version_to_load_from,
+                                          paste(i, ".rData", sep='')))
+        
+        OLD_GRID_FIT <- version_time$fit
+        
+        GRID_FIT <- eval(parse(text=grid_finding_runs[[i]]))
+      
+        expect_equal(OLD_GRID_FIT, GRID_FIT$fit, info=i, tolerance=tolerance)
     }
 })

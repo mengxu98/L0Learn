@@ -1,12 +1,15 @@
 #ifndef CD_H
 #define CD_H
 #include <algorithm>
-#include "RcppArmadillo.h"
+#include "RcppEigen.h"
 #include "BetaVector.h"
 #include "FitResult.h"
 #include "Params.h"
 #include "Model.h"
 #include "utils.h"
+
+#include <chrono>
+#include <thread>
 
 constexpr double lambda1_fudge_factor = 1e-15;
 
@@ -15,7 +18,7 @@ template<class T>
 class CDBase {
     protected:
         std::size_t NoSelectK;
-        std::vector<double> * Xtr;
+        std::vector<double> Xtr;
         std::size_t n, p;
         std::size_t Iter;
     
@@ -47,28 +50,28 @@ class CDBase {
 
     public:
         const T * X;
-        const arma::vec * y;
+        const Eigen::ArrayXd y;
         std::vector<double> ModelParams;
 
         char CyclingOrder;
         std::size_t MaxIters;
         std::size_t CurrentIters; // current number of iterations - maintained by Converged()
-        double rtol;
-        double atol;
-        arma::vec Lows;
-        arma::vec Highs;
+        const double rtol;
+        const double atol;
         bool ActiveSet;
         std::size_t ActiveSetNum;
         bool Stabilized = false;
+        const Eigen::ArrayXd Lows;
+        const Eigen::ArrayXd Highs;
 
 
-        CDBase(const T& Xi, const arma::vec& yi, const Params<T>& P);
+        CDBase(const T& Xi, const Eigen::ArrayXd& yi, const Params<T>& P);
         
         FitResult<T> Fit();
 
         virtual ~CDBase(){}
 
-        virtual inline double Objective(const arma::vec &, const beta_vector &)=0;
+        virtual inline double Objective(const Eigen::ArrayXd&, const beta_vector&)=0;
         
         virtual inline double Objective()=0;
         
@@ -76,7 +79,7 @@ class CDBase {
         
         virtual FitResult<T> _Fit() = 0;
 
-        static CDBase * make_CD(const T& Xi, const arma::vec& yi, const Params<T>& P);
+        static CDBase * make_CD(const T& Xi, const Eigen::ArrayXd& yi, const Params<T>& P);
         
 };
 
@@ -89,7 +92,7 @@ protected:
     
 public:
     
-    CDSwaps(const T& Xi, const arma::vec& yi, const Params<T>& P);
+    CDSwaps(const T& Xi, const Eigen::ArrayXd& yi, const Params<T>& P);
     
     virtual ~CDSwaps(){};
     
@@ -107,7 +110,7 @@ class CD : public CDBase<T>{
         std::vector<std::size_t> Range1p;
         
     public:
-        CD(const T& Xi, const arma::vec& yi, const Params<T>& P);
+        CD(const T& Xi, const Eigen::ArrayXd& yi, const Params<T>& P);
         
         virtual ~CD(){};
         
@@ -146,7 +149,7 @@ class CD : public CDBase<T>{
         
         void RestrictSupport();
         
-        void UpdateSparse_b0(arma::vec &r);
+        void UpdateSparse_b0(Eigen::ArrayXd &r);
         
         bool isConverged();
         
@@ -170,7 +173,7 @@ void CD<T, Derived>::UpdateBiWithBounds(const std::size_t i){
     
     const double grd_Bi = static_cast<Derived*>(this)->GetBiGrad(i); // Gradient of Loss wrt to Bi
     
-    (*this->Xtr)[i] = std::abs(grd_Bi);  // Store absolute value of gradient for later steps
+    this->Xtr[i] = std::abs(grd_Bi);  // Store absolute value of gradient for later steps
     
     const double old_Bi = this->B[i]; // copy of old Bi to adjust residuals if Bi updates
     
@@ -244,27 +247,49 @@ void CD<T, Derived>::UpdateBi(const std::size_t i){
     //    ApplyNewBi
     //    ApplyNewBiCWMinCheck (found in UpdateBiCWMinCheck)
     
+    //Rcpp::Rcout << "UpdateBi\n";
+    //std::this_thread::sleep_for(std::chrono::milliseconds(100));
     
+    //int ii = 0;
+    
+    //Rcpp::Rcout << "UpdateBi" << ii++ << "\n";
+    //std::this_thread::sleep_for(std::chrono::milliseconds(100));
     const double grd_Bi = static_cast<Derived*>(this)->GetBiGrad(i); // Gradient of Loss wrt to Bi
     
-    (*this->Xtr)[i] = std::abs(grd_Bi);  // Store absolute value of gradient for later steps
+    //Rcpp::Rcout << "UpdateBi" << ii++ << "\n";
+    //std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    this->Xtr[i] = std::abs(grd_Bi);  // Store absolute value of gradient for later steps
     
-    const double old_Bi = this->B[i]; // copy of old Bi to adjust residuals if Bi updates
+    //Rcpp::Rcout << "UpdateBi coeff \n";
+    //std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    //Rcpp::Rcout << "UpdateBi this->B.size()"<< this->B.size() << " \n";
+    //std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    //Rcpp::Rcout << "UpdateBi this->B(" << i << ")"<< this->B(i) << " \n";
+    //std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    const double old_Bi = this->B(i); // copy of old Bi to adjust residuals if Bi updates
     
+    //Rcpp::Rcout << "UpdateBi" << ii++ << "\n";
+    //std::this_thread::sleep_for(std::chrono::milliseconds(100));
     const double nrb_Bi = static_cast<Derived*>(this)->GetBiValue(old_Bi, grd_Bi); 
     // Update Step for New No regularization No Bounds Bi:
     //                     n  r                 b     _Bi => nrb_Bi
     // Example
     // For CDL0: the update step is nrb_Bi = old_Bi + grd_Bi
     
+    //Rcpp::Rcout << "UpdateBi" << ii++ << "\n";
+    //std::this_thread::sleep_for(std::chrono::milliseconds(100));
     const double reg_Bi = static_cast<Derived*>(this)->GetBiReg(nrb_Bi); 
     // Ideal Bi with L1 and L2 regularization (no bounds)
     // Does not account for L0 regularization 
     // Example
     // For CDL0: reg_Bi = nrb_Bi as there is no L1, L2 parameters
     
+    //Rcpp::Rcout << "UpdateBi" << ii++ << "\n";
+    //std::this_thread::sleep_for(std::chrono::milliseconds(100));
     const double new_Bi = std::copysign(reg_Bi, nrb_Bi); 
     
+    //Rcpp::Rcout << "UpdateBi" << ii++ << "\n";
+    //std::this_thread::sleep_for(std::chrono::milliseconds(100));
     if (i < this->NoSelectK){
         // L0 penalty is not applied for NoSelectK Variables.
         // Only L1 and L2 (if either are used)
@@ -291,7 +316,7 @@ bool CD<T, Derived>::UpdateBiCWMinCheck(const std::size_t i, const bool Cwmin){
     const double grd_Bi = static_cast<Derived*>(this)->GetBiGrad(i); 
     const double old_Bi = 0;
     
-    (*this->Xtr)[i] = std::abs(grd_Bi);  
+    this->Xtr[i] = std::abs(grd_Bi);  
     
     const double nrb_Bi = static_cast<Derived*>(this)->GetBiValue(old_Bi, grd_Bi); 
     const double reg_Bi = static_cast<Derived*>(this)->GetBiReg(nrb_Bi);
@@ -312,7 +337,7 @@ bool CD<T, Derived>::UpdateBiCWMinCheckWithBounds(const std::size_t i, const boo
     const double grd_Bi = static_cast<Derived*>(this)->GetBiGrad(i); 
     const double old_Bi = 0;
     
-    (*this->Xtr)[i] = std::abs(grd_Bi);  
+    this->Xtr[i] = std::abs(grd_Bi);  
     
     const double nrb_Bi = static_cast<Derived*>(this)->GetBiValue(old_Bi, grd_Bi); 
     const double reg_Bi = static_cast<Derived*>(this)->GetBiReg(nrb_Bi); 
@@ -343,9 +368,10 @@ bool CD<T, Derived>::UpdateBiCWMinCheckWithBounds(const std::size_t i, const boo
  */
 
 template<class T>
-CDBase<T>::CDBase(const T& Xi, const arma::vec& yi, const Params<T>& P) :
+CDBase<T>::CDBase(const T& Xi, const Eigen::ArrayXd& yi, const Params<T>& P) :
     ModelParams{P.ModelParams}, CyclingOrder{P.CyclingOrder}, MaxIters{P.MaxIters},
-    rtol{P.rtol}, atol{P.atol}, ActiveSet{P.ActiveSet}, ActiveSetNum{P.ActiveSetNum} 
+    rtol{P.rtol}, atol{P.atol}, ActiveSet{P.ActiveSet}, y{yi}, 
+    ActiveSetNum{P.ActiveSetNum}, Lows{P.Lows}, Highs{P.Highs}
     {
         
         this->lambda0 = P.ModelParams[0];
@@ -358,7 +384,7 @@ CDBase<T>::CDBase(const T& Xi, const arma::vec& yi, const Params<T>& P) :
         this->Xtr = P.Xtr; 
         this->Iter = P.Iter;
         
-        this->isSparse = std::is_same<T,arma::sp_mat>::value;
+        this->isSparse = std::is_same<T,Eigen::SparseMatrix<double>>::value;
         
         this->b0 = P.b0;
         this->intercept = P.intercept;
@@ -366,16 +392,15 @@ CDBase<T>::CDBase(const T& Xi, const arma::vec& yi, const Params<T>& P) :
         this->withBounds = P.withBounds;
         
         this->X = &Xi;
-        this->y = &yi;
         
-        this->n = X->n_rows;
-        this->p = X->n_cols;
+        this->n = X->rows();
+        this->p = X->cols();
         
         if (P.Init == 'u') {
-            this->B = *(P.InitialSol);
+            this->B = P.InitialSol;
         } else {
             //this->B = arma::zeros<beta_vector>(p);
-            this->B = this->B.zeros(p);
+            this->B = beta_vector::Zero(p);
         }
         
         if (CyclingOrder == 'u') {
@@ -385,9 +410,6 @@ CDBase<T>::CDBase(const T& Xi, const arma::vec& yi, const Params<T>& P) :
             std::iota(std::begin(cyclic), std::end(cyclic), 0);
             this->Order = cyclic;
         }
-        
-        this->Lows = P.Lows;
-        this->Highs = P.Highs;
         
         this->CurrentIters = 0;
     }
@@ -401,8 +423,8 @@ FitResult<T> CDBase<T>::Fit(){
     }
 }
 
-template class CDBase<arma::mat>;
-template class CDBase<arma::sp_mat>;
+template class CDBase<Eigen::MatrixXd>;
+template class CDBase<Eigen::SparseMatrix<double>>;
 
 /*
  * 
@@ -411,10 +433,10 @@ template class CDBase<arma::sp_mat>;
  */
 
 template<class T, class Derived>
-void CD<T, Derived>::UpdateSparse_b0(arma::vec& r){
+void CD<T, Derived>::UpdateSparse_b0(Eigen::ArrayXd& r){
     // Only run for regression when T is arma::sp_mat and intercept is True.
     // r is this->r on outer scope;                                                           
-    const double new_b0 = arma::mean(r);
+    const double new_b0 = r.mean();
     r -= new_b0;
     this->b0 += new_b0;
 }
@@ -500,7 +522,7 @@ bool CD<T, Derived>::CWMinCheck() {
 
 
 template<class T, class Derived>
-CD<T, Derived>::CD(const T& Xi, const arma::vec& yi, const Params<T>& P) : CDBase<T>(Xi, yi, P){
+CD<T, Derived>::CD(const T& Xi, const Eigen::ArrayXd& yi, const Params<T>& P) : CDBase<T>(Xi, yi, P){
     Range1p.resize(this->p);
     std::iota(std::begin(Range1p), std::end(Range1p), 0);
     ScreenSize = P.ScreenSize;
@@ -516,12 +538,12 @@ CD<T, Derived>::CD(const T& Xi, const arma::vec& yi, const Params<T>& P) : CDBas
  */
 
 template <class T>
-CDSwaps<T>::CDSwaps(const T& Xi, const arma::vec& yi, const Params<T>& Pi) : CDBase<T>(Xi, yi, Pi){
+CDSwaps<T>::CDSwaps(const T& Xi, const Eigen::ArrayXd& yi, const Params<T>& Pi) : CDBase<T>(Xi, yi, Pi){
     MaxNumSwaps = Pi.MaxNumSwaps;
     P = Pi;
 }
 
-template class CDSwaps<arma::mat>;
-template class CDSwaps<arma::sp_mat>;
+template class CDSwaps<Eigen::MatrixXd>;
+template class CDSwaps<Eigen::SparseMatrix<double>>;
 
 #endif

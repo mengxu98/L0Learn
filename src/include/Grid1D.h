@@ -3,7 +3,7 @@
 #include <memory>
 #include <algorithm>
 #include <map>
-#include "RcppArmadillo.h"
+#include "RcppEigen.h"
 #include "Params.h"
 #include "GridParams.h"
 #include "FitResult.h"
@@ -15,14 +15,14 @@ class Grid1D {
         std::size_t G_ncols;
         Params<T> P;
         const T * X;
-        const arma::vec * y;
+        const Eigen::ArrayXd y;
         std::size_t p;
         std::vector<std::unique_ptr<FitResult<T>>> G;
-        arma::vec Lambdas;
+        Eigen::ArrayXd Lambdas;
         bool LambdaU;
         std::size_t NnzStopNum;
-        std::vector<double> * Xtr;
-        arma::rowvec * ytX;
+        std::vector<double> Xtr;
+        Eigen::RowVectorXd ytX;
         double LambdaMinFactor;
         bool Refine;
         bool PartialSort;
@@ -32,7 +32,7 @@ class Grid1D {
         std::size_t NoSelectK;
 
     public:
-        Grid1D(const T& Xi, const arma::vec& yi, const GridParams<T>& PG);
+        Grid1D(const T& Xi, const Eigen::ArrayXd& yi, const GridParams<T>& PG);
         ~Grid1D();
         std::vector<std::unique_ptr<FitResult<T>>> Fit();
 };

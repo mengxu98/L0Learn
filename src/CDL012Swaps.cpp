@@ -1,7 +1,7 @@
 #include "CDL012Swaps.h"
 
 template <class T>
-CDL012Swaps<T>::CDL012Swaps(const T& Xi, const arma::vec& yi, const Params<T>& Pi) : CDSwaps<T>(Xi, yi, Pi) {}
+CDL012Swaps<T>::CDL012Swaps(const T& Xi, const Eigen::ArrayXd& yi, const Params<T>& Pi) : CDSwaps<T>(Xi, yi, Pi) {}
 
 
 template <class T>
@@ -11,7 +11,7 @@ FitResult<T> CDL012Swaps<T>::_FitWithBounds() {
 
 template <class T>
 FitResult<T> CDL012Swaps<T>::_Fit() {
-    auto result = CDL012<T>(*(this->X), *(this->y), this->P).Fit(); // result will be maintained till the end
+    auto result = CDL012<T>(*(this->X), this->y, this->P).Fit(); // result will be maintained till the end
     this->B = result.B;
     this->b0 = result.b0;
     double objective = result.Objective;
@@ -30,10 +30,10 @@ FitResult<T> CDL012Swaps<T>::_Fit() {
         
         // TODO: This calculation is already preformed in a previous step
         // Can be pulled/stored 
-        arma::vec r = *(this->y) - *(this->X) * this->B - this->b0; 
+        Eigen::ArrayXd r = this->y - (*(this->X) * this->B).array() - this->b0; 
         
         for (auto& i : NnzIndices) {
-            arma::rowvec riX = (r + this->B[i] * matrix_column_get(*(this->X), i)).t() * *(this->X); 
+            auto riX = (r + this->B[i] * matrix_column_get(*this->X, i)).matrix().transpose() * *(this->X); 
             
             double maxcorr = -1;
             std::size_t maxindex = -1;
@@ -67,14 +67,14 @@ FitResult<T> CDL012Swaps<T>::_Fit() {
                 this->B[maxindex] = Bi_nb;
                 
                 // Change initial solution to Swapped value to seed standard CD algorithm.
-                this->P.InitialSol = &(this->B);
-                *this->P.r = *(this->y) - *(this->X) * (this->B) - this->b0;
+                this->P.InitialSol = this->B;
+                this->P.r = this->y - (*(this->X) * (this->B)).array() - this->b0;
                 // this->P already has access to b0.
                 
                 // proposed_result object.
                 // Keep tack of previous_best result object
                 // Only override previous_best if proposed_result has a better objective.
-                result = CDL012<T>(*(this->X), *(this->y), this->P).Fit();
+                result = CDL012<T>(*(this->X), this->y, this->P).Fit();
                 
                 // Rcpp::Rcout << "Swap Objective  " <<  result.Objective << " \n";
                 // Rcpp::Rcout << "Old Objective  " <<  objective << " \n";
@@ -94,6 +94,6 @@ FitResult<T> CDL012Swaps<T>::_Fit() {
     return result;
 }
 
-template class CDL012Swaps<arma::mat>;
-template class CDL012Swaps<arma::sp_mat>;
+template class CDL012Swaps<Eigen::MatrixXd>;
+template class CDL012Swaps<Eigen::SparseMatrix<double>>;
     

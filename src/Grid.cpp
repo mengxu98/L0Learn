@@ -2,7 +2,7 @@
 
 // Assumes PG.P.Specs have been already set
 template <class T>
-Grid<T>::Grid(const T& X, const arma::vec& y, const GridParams<T>& PGi) {
+Grid<T>::Grid(const T& X, const Eigen::ArrayXd& y, const GridParams<T>& PGi) {
     PG = PGi;
     
     std::tie(BetaMultiplier, meanX, meany, scaley) = Normalize(X, 
@@ -17,28 +17,37 @@ Grid<T>::Grid(const T& X, const arma::vec& y, const GridParams<T>& PGi) {
 
 template <class T>
 void Grid<T>::Fit() {
-    
+    //int i = 0;
+    //Rcpp::Rcout << "Grid: "<< ++i << "\n";
+    //std::this_thread::sleep_for(std::chrono::milliseconds(100));
     std::vector<std::vector<std::unique_ptr<FitResult<T>>>> G;
     
+    //Rcpp::Rcout << "Grid: "<<++i << "\n";
+    //std::this_thread::sleep_for(std::chrono::milliseconds(100));
     if (PG.P.Specs.L0) {
         G.push_back(std::move(Grid1D<T>(Xscaled, yscaled, PG).Fit()));
         Lambda12.push_back(0);
     } else {
         G = std::move(Grid2D<T>(Xscaled, yscaled, PG).Fit());
     }
+    //Rcpp::Rcout << "Grid: "<<++i << "\n";
+    //std::this_thread::sleep_for(std::chrono::milliseconds(100));
     
     Lambda0 = std::vector< std::vector<double> >(G.size());
     NnzCount = std::vector< std::vector<std::size_t> >(G.size());
-    Solutions = std::vector< std::vector<arma::sp_mat> >(G.size());
+    Solutions = std::vector< std::vector<Eigen::SparseVector<double>> >(G.size());
     Intercepts = std::vector< std::vector<double> >(G.size());
     Converged = std::vector< std::vector<bool> >(G.size());
-
+    
+    //Rcpp::Rcout << "Grid: "<<++i << "\n";
+    //std::this_thread::sleep_for(std::chrono::milliseconds(100));
     for (std::size_t i=0; i<G.size(); ++i) {
         if (PG.P.Specs.L0L1){ 
             Lambda12.push_back(G[i][0]->ModelParams[1]); 
         } else if (PG.P.Specs.L0L2) { 
             Lambda12.push_back(G[i][0]->ModelParams[2]); 
         }
+        
         
         for (auto &g : G[i]) {
             Lambda0[i].push_back(g->ModelParams[0]);
@@ -55,7 +64,8 @@ void Grid<T>::Fit() {
             double b0;
             
             std::tie(B_unscaled, b0) = DeNormalize(g->B, BetaMultiplier, meanX, meany);
-            Solutions[i].push_back(arma::sp_mat(B_unscaled));
+            Rcpp::Rcout << B_unscaled.sparseView() << "\n";
+            Solutions[i].push_back(B_unscaled.sparseView());
             /* scaley is 1 for classification problems.
              *  g->intercept is 0 unless specifically optimized for in:
              *       classification
@@ -64,7 +74,9 @@ void Grid<T>::Fit() {
             Intercepts[i].push_back(scaley*g->b0 + b0);
         }
     }
+    //Rcpp::Rcout << "Grid: "<<++i << "\n";
+    //std::this_thread::sleep_for(std::chrono::milliseconds(100));
 }
 
-template class Grid<arma::mat>;
-template class Grid<arma::sp_mat>;
+template class Grid<Eigen::MatrixXd>;
+template class Grid<Eigen::SparseMatrix<double>>;

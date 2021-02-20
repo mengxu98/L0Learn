@@ -1,6 +1,6 @@
 #ifndef MAKECD_H
 #define MAKECD_H
-#include "RcppArmadillo.h"
+#include "RcppEigen.h"
 #include "Params.h"
 #include "CD.h"
 #include "CDL0.h"
@@ -13,7 +13,7 @@
 
 
 template <class T>
-CDBase<T> * make_CD(const T& Xi, const arma::vec& yi, const Params<T>& P) {
+CDBase<T> * make_CD(const T& Xi, const Eigen::ArrayXd& yi, const Params<T>& P) {
     if (P.Specs.SquaredError) {
         if (P.Specs.CD) {
             if (P.Specs.L0) {

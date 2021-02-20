@@ -1,6 +1,6 @@
 #ifndef CDL012Logistic_H
 #define CDL012Logistic_H
-#include "RcppArmadillo.h"
+#include "RcppEigen.h"
 #include "CD.h"
 #include "FitResult.h"
 #include "Params.h"
@@ -14,19 +14,19 @@ class CDL012Logistic : public CD<T, CDL012Logistic<T>> {
         double twolambda2;
         double qp2lamda2;
         double lambda1ol;
-        arma::vec ExpyXB;
+        Eigen::ArrayXd ExpyXB;
         // std::vector<double> * Xtr;
         T * Xy;
         
     public:
-        CDL012Logistic(const T& Xi, const arma::vec& yi, const Params<T>& P);
+        CDL012Logistic(const T& Xi, const Eigen::ArrayXd& yi, const Params<T>& P);
         //~CDL012Logistic(){}
         
         FitResult<T> _FitWithBounds() final;
         
         FitResult<T> _Fit() final;
 
-        inline double Objective(const arma::vec & r, const beta_vector & B) final;
+        inline double Objective(const Eigen::ArrayXd & r, const beta_vector & B) final;
         
         inline double Objective() final;
         
@@ -48,7 +48,8 @@ inline double CDL012Logistic<T>::GetBiGrad(const std::size_t i){
      * Notes:
      *      When called in CWMinCheck, we know that this->B[i] is 0.
      */
-    return -arma::dot(matrix_column_get(*(this->Xy), i), 1 / (1 + ExpyXB) ) + twolambda2 * this->B[i];
+    return - matrix_column_get(*this->Xy, i).cwiseProduct(1 / (1 + ExpyXB)).sum() + twolambda2 * this->B[i];
+    //return -arma::dot(matrix_column_get(*(this->Xy), i), 1 / (1 + ExpyXB) ) + twolambda2 * this->B[i];
     //return -arma::sum( matrix_column_get(*(this->Xy), i) / (1 + ExpyXB) ) + twolambda2 * this->B[i];
 }
 
@@ -64,7 +65,8 @@ inline double CDL012Logistic<T>::GetBiReg(const double Bi_step){
 
 template <class T>
 inline void CDL012Logistic<T>::ApplyNewBi(const std::size_t i, const double old_Bi, const double new_Bi){
-    ExpyXB %= arma::exp( (new_Bi - old_Bi) * matrix_column_get(*(this->Xy), i));
+    // ExpyXB %= arma::exp( (new_Bi - old_Bi) * matrix_column_get(*(this->Xy), i));
+    ExpyXB *= ((new_Bi - old_Bi) * matrix_column_get(*this->Xy, i)).exp();
     this->B[i] = new_Bi;
 }
 
@@ -72,34 +74,41 @@ template <class T>
 inline void CDL012Logistic<T>::ApplyNewBiCWMinCheck(const std::size_t i,
                                                     const double old_Bi,
                                                     const double new_Bi){
-    ExpyXB %= arma::exp( (new_Bi - old_Bi) * matrix_column_get(*(this->Xy), i));
+    //ExpyXB %= arma::exp( (new_Bi - old_Bi) * matrix_column_get(*(this->Xy), i));
+    ExpyXB *= ((new_Bi - old_Bi) * matrix_column_get(*this->Xy, i)).exp();
     this->B[i] = new_Bi;
     this->Order.push_back(i);
 }
 
 template <class T>
-inline double CDL012Logistic<T>::Objective(const arma::vec & expyXB, const beta_vector & B) {  // hint inline
-    const auto l2norm = arma::norm(B, 2);
+inline double CDL012Logistic<T>::Objective(const Eigen::ArrayXd & expyXB, const beta_vector & B) {  // hint inline
+    const auto l2norm = B.norm();
+    const auto l1norm = B.template lpNorm<1>();
     // arma::sum(arma::log(1 + 1 / expyXB)) is the negative log-likelihood
-    return arma::sum(arma::log(1 + 1 / expyXB)) + this->lambda0 * n_nonzero(B) + this->lambda1 * arma::norm(B, 1) + this->lambda2 * l2norm * l2norm;
+    return (1 + 1/expyXB).log().sum() + this->lambda0 * n_nonzero(B) + this->lambda1 * l1norm + this->lambda2 * l2norm * l2norm;
+    //  return arma::sum(arma::log(1 + 1 / expyXB.array())) + this->lambda0 * n_nonzero(B) + this->lambda1 * B.lpNorm<1>() + this->lambda2 * l2norm * l2norm;
 }
 
 template <class T>
 inline double CDL012Logistic<T>::Objective() {  // hint inline
-    const auto l2norm = arma::norm(this->B, 2);
+    const auto l2norm = this->B.norm();
+    const auto l1norm = this->B.template lpNorm<1>();
     // arma::sum(arma::log(1 + 1 / ExpyXB)) is the negative log-likelihood
-    return arma::sum(arma::log(1 + 1 / ExpyXB)) + this->lambda0 * n_nonzero(this->B) + this->lambda1 * arma::norm(this->B, 1) + this->lambda2 * l2norm * l2norm;
+    //return arma::sum(arma::log(1 + 1 / ExpyXB)) + this->lambda0 * n_nonzero(this->B) + this->lambda1 * arma::norm(this->B, 1) + this->lambda2 * l2norm * l2norm;
+    return (1 + 1/this->ExpyXB).log().sum() + this->lambda0 * n_nonzero(this->B) + this->lambda1 * l1norm + this->lambda2 * l2norm * l2norm;
 }
 
 template <class T>
-CDL012Logistic<T>::CDL012Logistic(const T& Xi, const arma::vec& yi, const Params<T>& P) : CD<T, CDL012Logistic<T>>(Xi, yi, P) {
+CDL012Logistic<T>::CDL012Logistic(const T& Xi, const Eigen::ArrayXd& yi, const Params<T>& P) : CD<T, CDL012Logistic<T>>(Xi, yi, P) {
     twolambda2 = 2 * this->lambda2;
     qp2lamda2 = (LipschitzConst + twolambda2); // this is the univariate lipschitz const of the differentiable objective
     this->thr2 = (2 * this->lambda0) / qp2lamda2;
     this->thr = std::sqrt(this->thr2);
     lambda1ol = this->lambda1 / qp2lamda2;
-    
-    ExpyXB = arma::exp(*this->y % (*(this->X) * this->B + this->b0)); // Maintained throughout the algorithm
+
+    ExpyXB = ( this->y*(((*this->X)*this->B).array() + this->b0)).exp();
+    //ExpyXB = (this->y->array().rowwise()/(((*this->X)*this->B).array() + this->b0).array()).exp();
+    //ExpyXB = arma::exp(*this->y % (*(this->X) * this->B + this->b0)); // Maintained throughout the algorithm
     Xy = P.Xy;
 }
 
@@ -116,10 +125,11 @@ FitResult<T> CDL012Logistic<T>::_Fit() {
         // Update the intercept
         if (this->intercept){
             const double b0old = this->b0;
-            // const double partial_b0 = - arma::sum( *(this->y) / (1 + ExpyXB) );
-            const double partial_b0 = - arma::dot( *(this->y) , 1/(1 + ExpyXB) );
+            // const double partial_b0 = - arma::dot( *(this->y) , 1/(1 + ExpyXB) );
+            const double partial_b0 = - (this->y.cwiseProduct(1/(1 + ExpyXB)).sum());
             this->b0 -= partial_b0 / (this->n * LipschitzConst); // intercept is not regularized
-            ExpyXB %= arma::exp( (this->b0 - b0old) * *(this->y));
+            // ExpyXB %= arma::exp( (this->b0 - b0old) * *(this->y));
+            ExpyXB *= ((this->b0 - b0old) *this->y).exp();
         }
         
         for (auto& i : this->Order) {
@@ -162,9 +172,10 @@ FitResult<T> CDL012Logistic<T>::_FitWithBounds() { // always uses active sets
         if (this->intercept){
             const double b0old = this->b0;
             // const double partial_b0 = - arma::sum( *(this->y) / (1 + ExpyXB) );
-            const double partial_b0 = - arma::dot( *(this->y) , 1/(1 + ExpyXB) );
+            const double partial_b0 = - (this->y.cwiseProduct(1/(1 + ExpyXB)).sum());
             this->b0 -= partial_b0 / (this->n * LipschitzConst); // intercept is not regularized
-            ExpyXB %= arma::exp( (this->b0 - b0old) * *(this->y));
+            //ExpyXB %= arma::exp( (this->b0 - b0old) * *(this->y));
+            ExpyXB *= ((this->b0 - b0old)*this->y).exp();
         }
         
         for (auto& i : this->Order) {
@@ -189,8 +200,8 @@ FitResult<T> CDL012Logistic<T>::_FitWithBounds() { // always uses active sets
     return this->result;
 }
 
-template class CDL012Logistic<arma::mat>;
-template class CDL012Logistic<arma::sp_mat>;
+template class CDL012Logistic<Eigen::MatrixXd>;
+template class CDL012Logistic<Eigen::SparseMatrix<double>>;
 
 
 #endif

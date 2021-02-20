@@ -1,12 +1,11 @@
 #include "Grid2D.h"
 
 template <class T>
-Grid2D<T>::Grid2D(const T& Xi, const arma::vec& yi, const GridParams<T>& PGi)
+Grid2D<T>::Grid2D(const T& Xi, const Eigen::ArrayXd& yi, const GridParams<T>& PGi) : y{yi}
 {
     // automatically selects lambda_0 (but assumes other lambdas are given in PG.P.ModelParams)
     X = &Xi;
-    y = &yi;
-    p = Xi.n_cols;
+    p = Xi.cols();
     PG = PGi;
     G_nrows = PG.G_nrows;
     G_ncols = PG.G_ncols;
@@ -20,7 +19,7 @@ Grid2D<T>::Grid2D(const T& Xi, const arma::vec& yi, const GridParams<T>& PGi)
 
 template <class T>
 Grid2D<T>::~Grid2D(){
-    delete Xtr;
+    //delete Xtr;
     if (PG.P.Specs.Logistic)
         delete PG.P.Xy;
     if (PG.P.Specs.SquaredHinge)
@@ -29,55 +28,52 @@ Grid2D<T>::~Grid2D(){
 
 template <class T>
 std::vector< std::vector<std::unique_ptr<FitResult<T>> > > Grid2D<T>::Fit() {
-    arma::vec Xtrarma;
+    Eigen::ArrayXd Xtrarma;
     
     if (PG.P.Specs.Logistic) {
-        auto n = X->n_rows;
+        auto n = X->rows();
         double b0 = 0;
-        arma::vec ExpyXB =  arma::ones<arma::vec>(n);
+        Eigen::ArrayXd ExpyXB =  Eigen::ArrayXd::Ones(n);
         if (PG.intercept) {
             for (std::size_t t = 0; t < 50; ++t) {
-                double partial_b0 = - arma::sum( *y / (1 + ExpyXB) );
+                double partial_b0 = - ( y / (1 + ExpyXB) ).sum();
                 b0 -= partial_b0 / (n * 0.25); // intercept is not regularized
-                ExpyXB = arma::exp(b0 * *y);
+                ExpyXB = (b0*y).exp();
             }
         }
         PG.P.b0 = b0;
-        Xtrarma = arma::abs(- arma::trans(*y /(1+ExpyXB)) * *X).t(); // = gradient of logistic loss at zero
+        Xtrarma = (- (y /(1+ExpyXB)).transpose().matrix() * *X).array().abs().transpose(); // = gradient of logistic loss at zero
         //Xtrarma = 0.5 * arma::abs(y->t() * *X).t(); // = gradient of logistic loss at zero
         
-        T Xy =  matrix_vector_schur_product(*X, y); // X->each_col() % *y;
-        
+        T Xy =  (*X).cwiseProduct(y.matrix()); // X->each_col() % *y;
         PG.P.Xy = new T;
         *PG.P.Xy = Xy;
     }
     
     else if (PG.P.Specs.SquaredHinge) {
-        auto n = X->n_rows;
+        auto n = X->rows();
         double b0 = 0;
-        arma::vec onemyxb =  arma::ones<arma::vec>(n);
-        arma::uvec indices = arma::find(onemyxb > 0);
+        Eigen::ArrayXd onemyxb =  Eigen::ArrayXd::Ones(n);
         if (PG.intercept){
             for (std::size_t t = 0; t < 50; ++t){
-                double partial_b0 = arma::sum(2 * onemyxb.elem(indices) % (- y->elem(indices) ) );
+                double partial_b0 = 2*(onemyxb.max(0) * -y).sum();
                 b0 -= partial_b0 / (n * 2); // intercept is not regularized
-                onemyxb = 1 - (*y * b0);
-                indices = arma::find(onemyxb > 0);
+                onemyxb = 1 - (y * b0);
             }
         }
         PG.P.b0 = b0;
-        T indices_rows = matrix_rows_get(*X, indices);
-        Xtrarma = 2 * arma::abs(arma::trans(y->elem(indices) % onemyxb.elem(indices))* indices_rows).t(); // = gradient of loss function at zero
+        Xtrarma = 2 * ((y * onemyxb.max(0)).transpose().matrix()* *X).array().abs().transpose(); // = gradient of loss function at zero
         //Xtrarma = 2 * arma::abs(y->t() * *X).t(); // = gradient of loss function at zero
-        T Xy =  matrix_vector_schur_product(*X, y); // X->each_col() % *y;
+        T Xy = (*X).cwiseProduct(y.matrix()); // X->each_col() % *y;
         PG.P.Xy = new T;
         *PG.P.Xy = Xy;
+        
     } else {
-        Xtrarma = arma::abs(y->t() * *X).t();
+        Xtrarma = (y.transpose().matrix() * *X).array().abs().transpose();
     }
     
     
-    double ytXmax = arma::max(Xtrarma);
+    double ytXmax = Xtrarma.maxCoeff();
     
     std::size_t index;
     if (PG.P.Specs.L0L1) {
@@ -89,38 +85,40 @@ std::vector< std::vector<std::unique_ptr<FitResult<T>> > > Grid2D<T>::Fit() {
     } else if (PG.P.Specs.L0L2) {
         index = 2;
     }
+    Eigen::ArrayXd Lambdas2 = Eigen::pow(10, Eigen::ArrayXd::LinSpaced(Lambda2Min, Lambda2Max, G_nrows));
+    //Eigen::ArrayXd Lambdas2 = arma::logspace(std::log10(Lambda2Min), std::log10(Lambda2Max), G_nrows);
+    Lambdas2 = Lambdas2.reverse();
     
-    arma::vec Lambdas2 = arma::logspace(std::log10(Lambda2Min), std::log10(Lambda2Max), G_nrows);
-    Lambdas2 = arma::flipud(Lambdas2);
+    std::vector<double> Xtrvec = std::vector<double>(Xtrarma.data(), 
+                                                     Xtrarma.data() + Xtrarma.rows() * Xtrarma.cols());
     
-    std::vector<double> Xtrvec = arma::conv_to< std::vector<double> >::from(Xtrarma);
     
-    Xtr = new std::vector<double>(X->n_cols); // needed! careful
+    Xtr = std::vector<double>(X->cols()); // needed! careful
     
     
     PG.XtrAvailable = true;
     // Rcpp::Rcout << "Grid2D Start\n";
     for(std::size_t i=0; i<Lambdas2.size();++i) { //auto &l : Lambdas2
         // Rcpp::Rcout << "Grid1D Start: " << i << "\n";
-        *Xtr = Xtrvec;
+        Xtr = Xtrvec;
         
         PG.Xtr = Xtr;
         PG.ytXmax = ytXmax;
         
         PG.P.ModelParams[index] = Lambdas2[i];
         
-        if (PG.LambdaU == true)
-            PG.Lambdas = PG.LambdasGrid[i];
+        if (PG.LambdaU)
+            PG.Lambdas = Eigen::VectorXd::Map(PG.LambdasGrid[i].data(), PG.LambdasGrid[i].size());
         
         //std::vector<std::unique_ptr<FitResult>> Gl();
         //auto Gl = Grid1D(*X, *y, PG).Fit();
         // Rcpp::Rcout << "Grid1D Start: " << i << "\n";
-        G.push_back(std::move(Grid1D<T>(*X, *y, PG).Fit()));
+        G.push_back(std::move(Grid1D<T>(*X, y, PG).Fit()));
     }
     
     return std::move(G);
     
 }
 
-template class Grid2D<arma::mat>;
-template class Grid2D<arma::sp_mat>;
+template class Grid2D<Eigen::MatrixXd>;
+template class Grid2D<Eigen::SparseMatrix<double>>;

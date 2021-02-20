@@ -1,31 +1,27 @@
 #ifndef BETA_VECTOR_H
 #define BETA_VECTOR_H
 #include <vector>
-#include "RcppArmadillo.h"
+#include "RcppEigen.h"
 
 /*
- * arma::vec implementation
+ * Eigen::VectorXd implementation
  */
 
 
-using beta_vector = arma::vec;
-//using beta_vector = arma::sp_mat;
+using beta_vector = Eigen::VectorXd;
+//using beta_vector = Eigen::SparseVector<double>;
 
-std::vector<std::size_t> nnzIndicies(const arma::vec& B);
+std::vector<std::size_t> nnzIndicies(const Eigen::VectorXd& B, const std::size_t start=0);
 
-std::vector<std::size_t> nnzIndicies(const arma::sp_mat& B);
+std::vector<std::size_t> nnzIndicies(const Eigen::SparseVector<double>& B, const std::size_t start=0);
 
-std::vector<std::size_t> nnzIndicies(const arma::vec& B, const std::size_t low);
+std::size_t n_nonzero(const Eigen::VectorXd& B);
 
-std::vector<std::size_t> nnzIndicies(const arma::sp_mat& B, const std::size_t low);
+std::size_t n_nonzero(const Eigen::SparseVector<double>& B);
 
-std::size_t n_nonzero(const arma::vec& B);
+bool has_same_support(const Eigen::VectorXd& B1, const Eigen::VectorXd& B2);
 
-std::size_t n_nonzero(const arma::sp_mat& B);
-
-bool has_same_support(const arma::vec& B1, const arma::vec& B2);
-
-bool has_same_support(const arma::sp_mat& B1, const arma::sp_mat& B2);
+bool has_same_support(const Eigen::SparseVector<double>& B1, const Eigen::SparseVector<double>& B2);
 
 
 #endif // BETA_VECTOR_H

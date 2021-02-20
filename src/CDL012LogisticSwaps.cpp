@@ -1,7 +1,7 @@
 #include "CDL012LogisticSwaps.h"
 
 template <class T>
-CDL012LogisticSwaps<T>::CDL012LogisticSwaps(const T& Xi, const arma::vec& yi, const Params<T>& Pi) : CDSwaps<T>(Xi, yi, Pi) {
+CDL012LogisticSwaps<T>::CDL012LogisticSwaps(const T& Xi, const Eigen::ArrayXd& yi, const Params<T>& Pi) : CDSwaps<T>(Xi, yi, Pi) {
     twolambda2 = 2 * this->lambda2;
     qp2lamda2 = (LipschitzConst + twolambda2); // this is the univariate lipschitz const of the differentiable objective
     this->thr2 = (2 * this->lambda0) / qp2lamda2;
@@ -18,7 +18,7 @@ FitResult<T> CDL012LogisticSwaps<T>::_FitWithBounds() {
 
 template <class T>
 FitResult<T> CDL012LogisticSwaps<T>::_Fit() {
-    auto result = CDL012Logistic<T>(*(this->X), *(this->y), this->P).Fit(); // result will be maintained till the end
+    auto result = CDL012Logistic<T>(*(this->X), this->y, this->P).Fit(); // result will be maintained till the end
     this->b0 = result.b0; // Initialize from previous later....!
     this->B = result.B;
     ExpyXB = result.ExpyXB; // Maintained throughout the algorithm
@@ -43,39 +43,35 @@ FitResult<T> CDL012LogisticSwaps<T>::_Fit() {
         foundbetter = false;
         
         // TODO: Check if this should be Templated Operation
-        arma::mat ExpyXBnojs = arma::zeros(this->n, NnzIndices.size());
+        Eigen::MatrixXd ExpyXBnojs = Eigen::MatrixXd::Zero(this->n, NnzIndices.size());
         
         int j_index = -1;
         for (auto& j : NnzIndices)
         {
             // Remove NnzIndices[j]
             ++j_index;
-            ExpyXBnojs.col(j_index) = ExpyXB % arma::exp( - this->B.at(j) * matrix_column_get(*(this->Xy), j));
+            ExpyXBnojs.col(j_index) = ExpyXB.cwiseProduct((-this->B.coeff(j) * matrix_column_get(*this->Xy, j)).exp());
 
         }
-        arma::mat gradients = - 1/(1 + ExpyXBnojs).t() * *Xy;
-        arma::mat abs_gradients = arma::abs(gradients);
-        
-        
+        Eigen::MatrixXd gradients = - (1/(1 + ExpyXBnojs.array())).transpose().matrix() * *Xy;
+
         j_index = -1;
         for (auto& j : NnzIndices) {
             // Set B[j] = 0
             ++j_index;
-            arma::vec ExpyXBnoj = ExpyXBnojs.col(j_index);
-            arma::rowvec gradient = gradients.row(j_index);
-            arma::rowvec abs_gradient = abs_gradients.row(j_index);
-            
-            arma::uvec indices = arma::sort_index(arma::abs(gradient), "descend");
+            Eigen::ArrayXd ExpyXBnoj = ExpyXBnojs.col(j_index).array();
+            Eigen::ArrayXd gradient = gradients.row(j_index).transpose().array();
+            std::vector<std::size_t> indices = arg_sort_array(gradient.abs(), "descend");
             foundbetter_i = false;
             
             // TODO: make sure this scans at least 100 coordinates from outside supp (now it does not)
             for(std::size_t ll = 0; ll < std::min(50, (int) this->p); ++ll) {
-                std::size_t i = indices(ll);
+                std::size_t i = indices[ll];
                 
                 if(this->B[i] == 0 && i >= this->NoSelectK) {
                     // Do not swap B[i] if i between 0 and NoSelectK;
                     
-                    arma::vec ExpyXBnoji = ExpyXBnoj;
+                    Eigen::ArrayXd ExpyXBnoji = ExpyXBnoj;
                     
                     double Biold = 0;
                     double partial_i = gradient[i];
@@ -92,9 +88,9 @@ FitResult<T> CDL012LogisticSwaps<T>::_Fit() {
                     // double Binew = clamp(std::copysign(z, x), this->Lows[i], this->Highs[i]); // no need to check if >= sqrt(2lambda_0/Lc)
                     
                     while(!converged && innerindex < 10  && ObjTemp >= Fmin) { // ObjTemp >= Fmin
-                        ExpyXBnoji %= arma::exp( (Binew - Biold) *  matrix_column_get(*Xy, i));
+                        ExpyXBnoji *= ((Binew - Biold) *  matrix_column_get(*Xy, i)).exp();
                         //partial_i = - arma::sum( matrix_column_get(*Xy, i) / (1 + ExpyXBnoji) ) + twolambda2 * Binew;
-                        partial_i = - arma::dot( matrix_column_get(*Xy, i), 1/(1 + ExpyXBnoji) ) + twolambda2 * Binew;
+                        partial_i = - (matrix_column_get(*Xy, i).cwiseProduct(1/(1 + ExpyXBnoji)).sum()) + twolambda2 * Binew;
                         
                         if (std::abs((Binew - Biold)/Biold) < 0.0001) {
                             converged = true;
@@ -128,12 +124,12 @@ FitResult<T> CDL012LogisticSwaps<T>::_Fit() {
                 if (foundbetter_i) {
                     this->B[j] = 0;
                     this->B[maxindex] = Bmaxindex;
-                    this->P.InitialSol = &(this->B);
+                    this->P.InitialSol = this->B;
                     
                     // TODO: Check if this line is necessary. P should already have b0.
                     this->P.b0 = this->b0;
                     
-                    result = CDL012Logistic<T>(*(this->X), *(this->y), this->P).Fit();
+                    result = CDL012Logistic<T>(*(this->X), this->y, this->P).Fit();
                     
                     ExpyXB = result.ExpyXB;
                     this->B = result.B;
@@ -164,5 +160,5 @@ FitResult<T> CDL012LogisticSwaps<T>::_Fit() {
     return result;
 }
 
-template class CDL012LogisticSwaps<arma::mat>;
-template class CDL012LogisticSwaps<arma::sp_mat>;
+template class CDL012LogisticSwaps<Eigen::MatrixXd>;
+template class CDL012LogisticSwaps<Eigen::SparseMatrix<double>>;

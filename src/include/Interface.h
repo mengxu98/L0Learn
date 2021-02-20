@@ -3,7 +3,7 @@
 
 #include <vector>
 #include <string>
-#include "RcppArmadillo.h"
+#include "RcppEigen.h"
 #include "Grid.h"
 #include "GridParams.h"
 #include "FitResult.h"

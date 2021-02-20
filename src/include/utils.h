@@ -1,8 +1,11 @@
 #ifndef L0LEARN_UTILS_H
 #define L0LEARN_UTILS_H
 #include <vector>
-#include "RcppArmadillo.h"
+#include "RcppEigen.h"
 #include "BetaVector.h"
+
+#include <chrono>
+#include <thread>
 
 
 template <typename T>
@@ -15,117 +18,151 @@ inline T clamp(T x, T low, T high) {
     return x;
 }
 
-void clamp_by_vector(arma::vec &B, const arma::vec& lows, const arma::vec& highs);
 
-void clamp_by_vector(arma::sp_mat &B, const arma::vec& lows, const arma::vec& highs);
+std::vector<size_t> arg_sort_array(const Eigen::Ref<const Eigen::ArrayXd> arr,
+                                   const std::string order = "descend");
+
+void clamp_by_vector(Eigen::VectorXd &B, const Eigen::ArrayXd& lows, const Eigen::ArrayXd& highs);
+
+void clamp_by_vector(Eigen::SparseVector<double> &B, const Eigen::ArrayXd& lows, const Eigen::ArrayXd& highs);
 
 
-template <typename T1>
-arma::vec inline matrix_column_get(const arma::mat &mat, T1 col){
-    return mat.unsafe_col(col);
+Eigen::ArrayXd inline make_predicitions(const Eigen::MatrixXd& X,
+                                        const Eigen::SparseVector<double> &B,
+                                        const double b0)
+{
+    return (X*B).array() + b0;
+
+}
+
+Eigen::ArrayXd inline make_predicitions(const Eigen::SparseMatrix<double>& X,
+                                        const Eigen::SparseVector<double>& B,
+                                        const double b0)
+{
+    return Eigen::MatrixXd(X*B).array() + b0;
+
 }
 
 template <typename T1>
-arma::vec inline matrix_column_get(const arma::sp_mat &mat, T1 col){
-    return arma::vec(mat.col(col));
+Eigen::ArrayXd inline matrix_column_get(const Eigen::MatrixXd &mat, T1 col){
+    return mat.col(col).array();
 }
 
 template <typename T1>
-arma::mat inline matrix_rows_get(const arma::mat &mat, const T1 vector_of_row_indices){
-    return mat.rows(vector_of_row_indices);
+Eigen::ArrayXd inline matrix_column_get(const Eigen::SparseMatrix<double> &mat, T1 col){
+    return Eigen::ArrayXd(mat.col(col));
 }
 
-template <typename T1>
-arma::sp_mat inline matrix_rows_get(const arma::sp_mat &mat, const T1 vector_of_row_indices){
+
+template <typename mat_type, typename T1>
+mat_type inline matrix_rows_get(const mat_type &mat, const T1 &vector_of_row_indices){
     // Option for CV for random splitting or contiguous splitting.
     // 1 - N without permutations splitting at floor(N/n_folds)
-    arma::sp_mat row_mat = arma::sp_mat(vector_of_row_indices.n_elem, mat.n_cols);
+    mat_type row_mat(vector_of_row_indices.size(), mat.cols());
     
-    for (auto i = 0; i < vector_of_row_indices.n_elem; i++){
-        auto row_index = vector_of_row_indices(i);
-        arma::sp_mat::const_row_iterator begin = mat.begin_row(row_index);
-        arma::sp_mat::const_row_iterator end = mat.end_row(row_index);
-        
-        for (; begin != end; ++begin){
-            row_mat(i, begin.col()) = *begin;
-        }
+    for (auto i = 0; i < vector_of_row_indices.size(); i++){
+        row_mat.row(i) = mat.row(vector_of_row_indices[i]);
     }
     return row_mat;
 }
 
 template <typename T1>
-arma::mat inline matrix_vector_schur_product(const arma::mat &mat, const T1 &y){
-    // return mat[i, j] * y[i] for each j
-    return mat.each_col() % *y;
-}
-
-template <typename T1>
-arma::sp_mat inline matrix_vector_schur_product(const arma::sp_mat &mat, const T1 &y){
-    
-    arma::sp_mat Xy = arma::sp_mat(mat);
-    arma::sp_mat::iterator begin = Xy.begin();
-    arma::sp_mat::iterator end = Xy.end();
-    
-    auto yp = (*y);
-    for (; begin != end; ++begin){
-        auto row = begin.row();
-        *begin = (*begin)  * yp(row);
+std::unordered_map<std::size_t, std::size_t> vector_indicies_dictionary(const T1 &vector_of_row_indices)
+{
+    std::unordered_map<std::size_t, std::size_t> vector_map;
+    for (std::size_t i = 0; i < vector_of_row_indices.size(); i++)
+    {
+        vector_map.insert(std::pair<std::size_t, std::size_t>(vector_of_row_indices[i], i));
     }
-    return Xy;
+    return vector_map;
 }
 
+
 template <typename T1>
-arma::sp_mat inline matrix_vector_divide(const arma::sp_mat& mat, const T1 &u){
-    arma::sp_mat divided_mat = arma::sp_mat(mat);
+Eigen::SparseMatrix<double> inline matrix_rows_get(const Eigen::SparseMatrix<double> &mat, const T1 &vector_of_row_indices){
+    // Option for CV for random splitting or contiguous splitting.
+    // 1 - N without permutations splitting at floor(N/n_folds)
+    std::vector< Eigen::Triplet<double> > tripletList;
+    std::size_t estimation_of_entries = mat.nonZeros() * vector_of_row_indices.size() / mat.rows();
+    tripletList.reserve(estimation_of_entries);
+    //Rcpp::Rcout << "1\n";
+    //std::this_thread::sleep_for(std::chrono::milliseconds(100));
     
-    //auto up = (*u);
-    arma::sp_mat::iterator begin = divided_mat.begin();
-    arma::sp_mat::iterator end = divided_mat.end();
-    for ( ; begin != end; ++begin){
-        *begin = (*begin) / u(begin.row());
+    auto vector_map = vector_indicies_dictionary(vector_of_row_indices);
+    
+    if (vector_map.size() != vector_of_row_indices.size()){
+        Rcpp::stop("Does not support duplicate rows\n");
     }
-    return divided_mat;
+    //Rcpp::Rcout << "2\n";
+    //std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    for (std::size_t k = 0; k < mat.outerSize(); ++k){
+        for (Eigen::SparseMatrix<double>::InnerIterator it(mat, k); it; ++it){
+            auto subset_row = vector_map.find(it.row());
+            if (subset_row != vector_map.end()){
+                tripletList.push_back(Eigen::Triplet<double>(subset_row->second,
+                                                             it.col(),
+                                                             it.value()));
+            }
+        }
+    }
+    //Rcpp::Rcout << "3\n";
+    //std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    
+    Eigen::SparseMatrix<double> row_mat(vector_of_row_indices.size(), mat.cols());
+    
+    //Rcpp::Rcout << row_mat.size() << " \n";
+    //Rcpp::Rcout << "4\n";
+    //std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    
+    // for (auto&x : tripletList){
+    //     Rcpp::Rcout << x.row() << ", " <<  x.col() << ", " << x.value() << "\n";
+    // }
+    //std::this_thread::sleep_for(std::chrono::milliseconds(10000));
+    
+    row_mat.setFromTriplets(tripletList.begin(), tripletList.end());
+    row_mat.makeCompressed();
+    
+    //Rcpp::Rcout << "5\n";
+    //std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    return row_mat;
 }
 
-template <typename T1>
-arma::mat inline matrix_vector_divide(const arma::mat& mat, const T1 &u){
-    return mat.each_col() / u;
+template <typename vec_type, typename index_type>
+vec_type inline vector_subset(const vec_type &vec, const index_type &vector_of_indices){
+    vec_type sub_vector;
+    
+    for (auto& ind: vector_of_indices){
+        sub_vector.push_back(vec[ind]);
+    }
+    return sub_vector;
 }
 
-arma::rowvec inline matrix_column_sums(const arma::mat& mat){
-    return arma::sum(mat, 0);
+Eigen::RowVectorXd inline matrix_column_sums(const Eigen::MatrixXd& mat){
+    return mat.colwise().sum();
 }
 
-arma::rowvec inline matrix_column_sums(const arma::sp_mat& mat){
-    return arma::rowvec(arma::sum(mat, 0));
+Eigen::RowVectorXd inline matrix_column_sums(const Eigen::SparseMatrix<double>& mat){
+    auto nrows = mat.rows();
+    return Eigen::RowVectorXd::Ones(nrows) * mat;
 }
 
 template <typename T1, typename T2>
-double inline matrix_column_dot(const arma::mat &mat, T1 col, const T2 &u){
-    return arma::dot(matrix_column_get(mat, col), u);
+double inline matrix_column_dot(const Eigen::MatrixXd &mat, T1 col, const T2 &u){
+    return matrix_column_get(mat, col).cwiseProduct(u).sum();
 }
 
 template <typename T1, typename T2>
-double inline matrix_column_dot(const arma::sp_mat &mat, T1 col, const T2 &u){
-    return arma::dot(matrix_column_get(mat, col), u);
+double inline matrix_column_dot(const Eigen::SparseMatrix<double> &mat, T1 col, const T2 &u){
+    return matrix_column_get(mat, col).cwiseProduct(u).sum();
 }
 
-template <typename T1, typename T2>
-arma::vec inline matrix_column_mult(const arma::mat &mat, T1 col, const T2 &u){
-    return matrix_column_get(mat, col)*u;
-}
 
-template <typename T1, typename T2>
-arma::vec inline matrix_column_mult(const arma::sp_mat &mat, T1 col, const T2 &u){
-    return matrix_column_get(mat, col)*u;
-}
+Eigen::RowVectorXd matrix_normalize(Eigen::SparseMatrix<double> &mat_norm);
 
-arma::rowvec matrix_normalize(arma::sp_mat &mat_norm);
+Eigen::RowVectorXd matrix_normalize(Eigen::MatrixXd &mat_norm);
 
-arma::rowvec matrix_normalize(arma::mat &mat_norm);
+Eigen::RowVectorXd matrix_center(const Eigen::MatrixXd& X, Eigen::MatrixXd& X_normalized, bool intercept);
 
-arma::rowvec matrix_center(const arma::mat& X, arma::mat& X_normalized, bool intercept);
-
-arma::rowvec matrix_center(const arma::sp_mat& X, arma::sp_mat& X_normalized, bool intercept);
+Eigen::RowVectorXd matrix_center(const Eigen::SparseMatrix<double>& X, Eigen::SparseMatrix<double>& X_normalized, bool intercept);
 
 #endif //L0LEARN_UTILS_H

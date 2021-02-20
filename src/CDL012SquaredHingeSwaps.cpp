@@ -1,7 +1,7 @@
 #include "CDL012SquaredHingeSwaps.h"
 
 template <class T>
-CDL012SquaredHingeSwaps<T>::CDL012SquaredHingeSwaps(const T& Xi, const arma::vec& yi, const Params<T>& Pi) : CDSwaps<T>(Xi, yi, Pi) {
+CDL012SquaredHingeSwaps<T>::CDL012SquaredHingeSwaps(const T& Xi, const Eigen::ArrayXd& yi, const Params<T>& Pi) : CDSwaps<T>(Xi, yi, Pi) {
     twolambda2 = 2 * this->lambda2;
     qp2lamda2 = (LipschitzConst + twolambda2); // this is the univariate lipschitz constant of the differentiable objective
     this->thr2 = (2 * this->lambda0) / qp2lamda2;
@@ -17,11 +17,11 @@ FitResult<T> CDL012SquaredHingeSwaps<T>::_FitWithBounds() {
 
 template <class T>
 FitResult<T> CDL012SquaredHingeSwaps<T>::_Fit() {
-    auto result = CDL012SquaredHinge<T>(*(this->X), *(this->y), this->P).Fit(); // result will be maintained till the end
+    auto result = CDL012SquaredHinge<T>(*(this->X), this->y, this->P).Fit(); // result will be maintained till the end
     this->b0 = result.b0; // Initialize from previous later....!
     this->B = result.B;
     
-    arma::vec onemyxb = result.onemyxb;
+    Eigen::ArrayXd onemyxb = result.onemyxb;
     
     this->objective = result.Objective;
     double Fmin = this->objective;
@@ -43,24 +43,21 @@ FitResult<T> CDL012SquaredHingeSwaps<T>::_Fit() {
         
         for (auto& j : NnzIndices) {
            
-            arma::vec onemyxbnoj = onemyxb + this->B[j] * *(this->y) % matrix_column_get(*(this->X), j);
-            arma::uvec indices = arma::find(onemyxbnoj > 0);
-            
-            
+            Eigen::ArrayXd onemyxbnoj = onemyxb + this->B[j] * this->y*matrix_column_get(*this->X, j);
+
             for(std::size_t i = 0; i < this->p; ++i) {
                 if(this->B[i] == 0 && i>=this->NoSelectK) {
                     
                     double Biold = 0;
                     double Binew;
-                    
-                    
-                    double partial_i = arma::sum(2 * onemyxbnoj.elem(indices) % (- (this->y)->elem(indices) % matrix_column_get(*(this->X), i).elem(indices)));
+
+                    double partial_i = 2*(onemyxbnoj.max(0)*-this->y.max(0)*matrix_column_get(*this->X, i)).sum();
                     
                     bool converged = false;
                     if (std::abs(partial_i) >= this->lambda1 + stl0Lc){
                         
                         //std::cout<<"Adding: "<<i<< std::endl;
-                        arma::vec onemyxbnoji = onemyxbnoj;
+                        Eigen::ArrayXd onemyxbnoji = onemyxbnoj;
                         
                         std::size_t l = 0;
                         beta_vector Btemp = this->B;
@@ -74,10 +71,9 @@ FitResult<T> CDL012SquaredHingeSwaps<T>::_Fit() {
                             Binew = std::copysign(z, x);
                             
                             // Binew = clamp(std::copysign(z, x), this->Lows[i], this->Highs[i]); // no need to check if >= sqrt(2lambda_0/Lc)
-                            onemyxbnoji += (Biold - Binew) * *(this->y) % matrix_column_get(*(this->X), i);
+                            onemyxbnoji += (Biold - Binew) *this->y*matrix_column_get(*this->X, i);
                             
-                            arma::uvec indicesi = arma::find(onemyxbnoji > 0);
-                            partial_i = arma::sum(2 * onemyxbnoji.elem(indicesi) % (- (this->y)->elem(indicesi) % matrix_column_get(*(this->X), i).elem(indicesi)));
+                            partial_i = 2*(onemyxbnoji.max(0)*-this->y*matrix_column_get(*this->X, i)).sum();
                             
                             if (std::abs((Binew - Biold) / Biold) < 0.0001){
                                 converged = true;   
@@ -104,12 +100,12 @@ FitResult<T> CDL012SquaredHingeSwaps<T>::_Fit() {
                 this->B[j] = 0;
                 this->B[maxindex] = Bmaxindex;
                 
-                this->P.InitialSol = &(this->B);
+                this->P.InitialSol = this->B;
                 
                 // TODO: Check if this line is needed. P should already have b0.
                 this->P.b0 = this->b0;
                 
-                result = CDL012SquaredHinge<T>(*(this->X), *(this->y), this->P).Fit();
+                result = CDL012SquaredHinge<T>(*(this->X), this->y, this->P).Fit();
                 
                 this->B = result.B;
                 this->b0 = result.b0;
@@ -131,5 +127,5 @@ FitResult<T> CDL012SquaredHingeSwaps<T>::_Fit() {
     return result;
 }
 
-template class CDL012SquaredHingeSwaps<arma::mat>;
-template class CDL012SquaredHingeSwaps<arma::sp_mat>;
+template class CDL012SquaredHingeSwaps<Eigen::MatrixXd>;
+template class CDL012SquaredHingeSwaps<Eigen::SparseMatrix<double>>;

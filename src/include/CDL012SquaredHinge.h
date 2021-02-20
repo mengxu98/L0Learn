@@ -1,6 +1,6 @@
 #ifndef CDL012SquaredHinge_H
 #define CDL012SquaredHinge_H
-#include "RcppArmadillo.h"
+#include "RcppEigen.h"
 #include "CD.h"
 #include "FitResult.h"
 #include "Params.h"
@@ -15,13 +15,13 @@ class CDL012SquaredHinge : public CD<T, CDL012SquaredHinge<T>> {
         double qp2lamda2;
         double lambda1ol;
         // std::vector<double> * Xtr;
-        arma::vec onemyxb;
-        arma::uvec indices;
+        Eigen::ArrayXd onemyxb;
+        Eigen::Array<std::size_t, Eigen::Dynamic, 1> indices;
         T * Xy;
 
 
     public:
-        CDL012SquaredHinge(const T& Xi, const arma::vec& yi, const Params<T>& P);
+        CDL012SquaredHinge(const T& Xi, const Eigen::ArrayXd& yi, const Params<T>& P);
         
         //~CDL012SquaredHinge(){}
 
@@ -29,7 +29,7 @@ class CDL012SquaredHinge : public CD<T, CDL012SquaredHinge<T>> {
         
         FitResult<T> _Fit() final;
 
-        inline double Objective(const arma::vec & r, const beta_vector & B) final;
+        inline double Objective(const Eigen::ArrayXd& r, const beta_vector & B) final;
         
         inline double Objective() final;
         
@@ -48,7 +48,8 @@ class CDL012SquaredHinge : public CD<T, CDL012SquaredHinge<T>> {
 template <class T>
 inline double CDL012SquaredHinge<T>::GetBiGrad(const std::size_t i){
     // Rcpp::Rcout << "Grad stuff: " << arma::sum(2 * onemyxb.elem(indices) % (- matrix_column_get(*Xy, i).elem(indices))  ) << "\n";
-    return arma::sum(2 * onemyxb.elem(indices) % (- matrix_column_get(*Xy, i).elem(indices)) ) + twolambda2 * this->B[i];
+    //return arma::sum(2 * onemyxb.elem(indices) % (- matrix_column_get(*Xy, i).elem(indices)) ) + twolambda2 * this->B[i];
+    return 2*(onemyxb.max(0)*-matrix_column_get(*Xy, i)).sum() + twolambda2 * this->B[i];
 }
 
 template <class T>
@@ -63,38 +64,35 @@ inline double CDL012SquaredHinge<T>::GetBiReg(const double Bi_step){
 
 template <class T>
 inline void CDL012SquaredHinge<T>::ApplyNewBi(const std::size_t i, const double Bi_old, const double Bi_new){
-    onemyxb += (Bi_old - Bi_new) * matrix_column_get(*(this->Xy), i);
+    onemyxb += (Bi_old - Bi_new) * matrix_column_get(*this->Xy, i);
     this->B[i] = Bi_new;
-    indices = arma::find(onemyxb > 0);
 }
 
 template <class T>
 inline void CDL012SquaredHinge<T>::ApplyNewBiCWMinCheck(const std::size_t i, const double Bi_old, const double Bi_new){
-    onemyxb += (Bi_old - Bi_new) * matrix_column_get(*(this->Xy), i);
+    onemyxb += (Bi_old - Bi_new) * matrix_column_get(*this->Xy, i);
     this->B[i] = Bi_new;
-    indices = arma::find(onemyxb > 0);
     this->Order.push_back(i);
 }
 
 template <class T>
-inline double CDL012SquaredHinge<T>::Objective(const arma::vec & onemyxb, const beta_vector & B) {
-    
-    auto l2norm = arma::norm(B, 2);
-    arma::uvec indices = arma::find(onemyxb > 0);
-    
-    return arma::sum(onemyxb.elem(indices) % onemyxb.elem(indices)) + this->lambda0 * n_nonzero(B) + this->lambda1 * arma::norm(B, 1) + this->lambda2 * l2norm * l2norm;
+inline double CDL012SquaredHinge<T>::Objective(const Eigen::ArrayXd& onemyxb, const beta_vector & B) {
+    const auto l2norm = B.norm();
+    const auto l1norm = B.template lpNorm<1>();
+    return onemyxb.cwiseMax(0).square().sum() + this->lambda0 * n_nonzero(B) + this->lambda1 * l1norm + this->lambda2 * l2norm * l2norm;
 }
 
 
 template <class T>
 inline double CDL012SquaredHinge<T>::Objective() {
     
-    auto l2norm = arma::norm(this->B, 2);
-    return arma::sum(onemyxb.elem(indices) % onemyxb.elem(indices)) + this->lambda0 * n_nonzero(this->B) + this->lambda1 * arma::norm(this->B, 1) + this->lambda2 * l2norm * l2norm;
+    const auto l2norm = this->B.norm();
+    const auto l1norm = this->B.template lpNorm<1>();
+    return onemyxb.max(0).square().sum() + this->lambda0 * n_nonzero(this->B) + this->lambda1 *l1norm + this->lambda2 * l2norm * l2norm;
 }
 
 template <class T>
-CDL012SquaredHinge<T>::CDL012SquaredHinge(const T& Xi, const arma::vec& yi, const Params<T>& P) : CD<T, CDL012SquaredHinge<T>>(Xi, yi, P) {
+CDL012SquaredHinge<T>::CDL012SquaredHinge(const T& Xi, const Eigen::ArrayXd& yi, const Params<T>& P) : CD<T, CDL012SquaredHinge<T>>(Xi, yi, P) {
     twolambda2 = 2 * this->lambda2;
     qp2lamda2 = (LipschitzConst + twolambda2); // this is the univariate lipschitz const of the differentiable objective
     this->thr2 = (2 * this->lambda0) / qp2lamda2;
@@ -103,10 +101,9 @@ CDL012SquaredHinge<T>::CDL012SquaredHinge(const T& Xi, const arma::vec& yi, cons
     
     // TODO: Review this line
     // TODO: Pass work from previous solution.
-    onemyxb = 1 - *(this->y) % (*(this->X) * this->B + this->b0);
+    auto XB = (*this->X)*this->B.matrix();
+    onemyxb = 1 - (XB.array() + this->b0).cwiseProduct(this->y);
     
-    // TODO: Add comment for purpose of 'indices'
-    indices = arma::find(onemyxb > 0);
     Xy = P.Xy;
 }
 
@@ -127,10 +124,9 @@ FitResult<T> CDL012SquaredHinge<T>::_Fit() {
         // Update the intercept
         if (this->intercept) {
             const double b0old = this->b0;
-            const double partial_b0 = arma::sum(2 * onemyxb.elem(indices) % (- (this->y)->elem(indices) ) );
+            const double partial_b0 = 2*(onemyxb.max(0) *-this->y.max(0)).sum();
             this->b0 -= partial_b0 / (this->n * LipschitzConst); // intercept is not regularized
-            onemyxb += *(this->y) * (b0old - this->b0);
-            indices = arma::find(onemyxb > 0);
+            onemyxb += this->y * (b0old - this->b0);
         }
         
         for (auto& i : this->Order) {
@@ -173,10 +169,9 @@ FitResult<T> CDL012SquaredHinge<T>::_FitWithBounds() {
         // Update the intercept
         if (this->intercept) {
             const double b0old = this->b0;
-            const double partial_b0 = arma::sum(2 * onemyxb.elem(indices) % (- (this->y)->elem(indices) ) );
+            const double partial_b0 = 2*(onemyxb.max(0)*-this->y.max(0)).sum();
             this->b0 -= partial_b0 / (this->n * LipschitzConst); // intercept is not regularized
-            onemyxb += *(this->y) * (b0old - this->b0);
-            indices = arma::find(onemyxb > 0);
+            onemyxb += this->y * (b0old - this->b0);
         }
         
         for (auto& i : this->Order) {
@@ -202,7 +197,7 @@ FitResult<T> CDL012SquaredHinge<T>::_FitWithBounds() {
     return this->result;
 }
 
-template class CDL012SquaredHinge<arma::mat>;
-template class CDL012SquaredHinge<arma::sp_mat>;
+template class CDL012SquaredHinge<Eigen::MatrixXd>;
+template class CDL012SquaredHinge<Eigen::SparseMatrix<double>>;
 
 #endif

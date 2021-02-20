@@ -1,6 +1,6 @@
 #ifndef CDL012_H
 #define CDL012_H
-#include "RcppArmadillo.h"
+#include "RcppEigen.h"
 #include "CD.h"
 #include "FitResult.h"
 #include "utils.h"
@@ -10,17 +10,17 @@ template <class T>
 class CDL012 : public CD<T, CDL012<T>>{
     private:
         double Onep2lamda2;
-        arma::vec r; //vector of residuals
+        Eigen::ArrayXd r; //vector of residuals
         
     public:
-        CDL012(const T& Xi, const arma::vec& yi, const Params<T>& P);
+        CDL012(const T& Xi, const Eigen::ArrayXd& yi, const Params<T>& P);
         //~CDL012(){}
 
         FitResult<T> _FitWithBounds() final;
         
         FitResult<T> _Fit() final;
 
-        inline double Objective(const arma::vec & r, const beta_vector & B) final;
+        inline double Objective(const Eigen::ArrayXd & r, const beta_vector & B) final;
         
         inline double Objective() final;
 
@@ -39,7 +39,8 @@ class CDL012 : public CD<T, CDL012<T>>{
 
 template <class T>
 inline double CDL012<T>::GetBiGrad(const std::size_t i){
-    return matrix_column_dot(*(this->X), i, this->r);
+    // Matrix multiplication between Xi and r
+    return matrix_column_get(*this->X, i).cwiseProduct(this->r).sum();
 }
 
 template <class T>
@@ -55,36 +56,38 @@ inline double CDL012<T>::GetBiReg(const double nrb_Bi){
 
 template <class T>
 inline void CDL012<T>::ApplyNewBi(const std::size_t i, const double Bi_old, const double Bi_new){
-    this->r += matrix_column_mult(*(this->X), i, Bi_old - Bi_new);
+    this->r += matrix_column_get(*this->X, i) * (Bi_old - Bi_new);
     this->B[i] = Bi_new;
 }
 
 template <class T>
 inline void CDL012<T>::ApplyNewBiCWMinCheck(const std::size_t i, const double Bi_old, const double Bi_new){
-    this->r += matrix_column_mult(*(this->X), i, Bi_old - Bi_new);
+    this->r += matrix_column_get(*this->X, i) * (Bi_old - Bi_new);
     this->B[i] = Bi_new;
     this->Order.push_back(i);
 }
 
 template <class T>
-inline double CDL012<T>::Objective(const arma::vec & r, const beta_vector & B) { 
-    auto l2norm = arma::norm(B, 2);
-    return 0.5 * arma::dot(r, r) + this->lambda0 * n_nonzero(this->B) + this->lambda1 * arma::norm(B, 1) + this->lambda2 * l2norm * l2norm;
+inline double CDL012<T>::Objective(const Eigen::ArrayXd & r, const beta_vector & B) { 
+    const auto l2norm = B.norm();
+    const auto l1norm = B.template lpNorm<1>();
+    return 0.5 * r.square().sum() + this->lambda0 * n_nonzero(this->B) + this->lambda1 * l1norm + this->lambda2 * l2norm * l2norm;
 }
 
 template <class T>
 inline double CDL012<T>::Objective() { 
-    auto l2norm = arma::norm(this->B, 2);
-    return 0.5 * arma::dot(this->r, this->r) + this->lambda0 * n_nonzero(this->B) + this->lambda1 * arma::norm(this->B, 1) + this->lambda2 * l2norm * l2norm;
+    const auto l2norm = this->B.norm();
+    const auto l1norm = this->B.template lpNorm<1>();
+    return 0.5 * this->r.square().sum() + this->lambda0 * n_nonzero(this->B) + this->lambda1 * l1norm + this->lambda2 * l2norm * l2norm;
 }
 
 template <class T>
-CDL012<T>::CDL012(const T& Xi, const arma::vec& yi, const Params<T>& P) : CD<T, CDL012<T>>(Xi, yi, P) {
+CDL012<T>::CDL012(const T& Xi, const Eigen::ArrayXd& yi, const Params<T>& P) : CD<T, CDL012<T>>(Xi, yi, P) {
     Onep2lamda2 = 1 + 2 * this->lambda2; 
     
     this->thr2 = 2 * this->lambda0 / Onep2lamda2;
     this->thr = std::sqrt(this->thr2);
-    this->r = *P.r;
+    this->r = P.r;
     this->result.r = P.r;
 }
 
@@ -123,7 +126,7 @@ FitResult<T> CDL012<T>::_Fit() {
     
     this->result.Objective = this->objective;
     this->result.B = this->B;
-    *(this->result.r) = this->r; // change to pointer later
+    this->result.r = this->r; // change to pointer later
     this->result.IterNum = this->CurrentIters;
     this->result.b0 = this->b0;
     return this->result;
@@ -168,13 +171,13 @@ FitResult<T> CDL012<T>::_FitWithBounds() {
     
     this->result.Objective = this->objective;
     this->result.B = this->B;
-    *(this->result.r) = this->r; // change to pointer later
+    this->result.r = this->r; // change to pointer later
     this->result.IterNum = this->CurrentIters;
     this->result.b0 = this->b0;
     return this->result;
 }
 
-template class CDL012<arma::mat>;
-template class CDL012<arma::sp_mat>;
+template class CDL012<Eigen::MatrixXd>;
+template class CDL012<Eigen::SparseMatrix<double>>;
 
 #endif

@@ -1,19 +1,22 @@
 #include "Grid1D.h"
 
+#include <chrono>
+#include <thread>
+
+
 template <class T>
-Grid1D<T>::Grid1D(const T& Xi, const arma::vec& yi, const GridParams<T>& PG) {
+Grid1D<T>::Grid1D(const T& Xi, const Eigen::ArrayXd& yi, const GridParams<T>& PG) : y{yi}{
     // automatically selects lambda_0 (but assumes other lambdas are given in PG.P.ModelParams)
     
     X = &Xi;
-    y = &yi;
-    p = Xi.n_cols;
+    p = Xi.cols();
     LambdaMinFactor = PG.LambdaMinFactor;
     ScaleDownFactor = PG.ScaleDownFactor;
     P = PG.P;
-    P.Xtr = new std::vector<double>(X->n_cols); // needed! careful
-    P.ytX = new arma::rowvec(X->n_cols);
-    P.D = new std::map<std::size_t, arma::rowvec>();
-    P.r = new arma::vec(Xi.n_rows);
+    P.Xtr = std::vector<double>(Xi.cols());
+    P.ytX = Eigen::RowVectorXd(Xi.cols());
+    P.D = std::map<std::size_t,Eigen::RowVectorXd>();
+    P.r = Eigen::ArrayXd(Xi.rows());
     Xtr = P.Xtr;
     ytX = P.ytX;
     NoSelectK = P.NoSelectK;
@@ -23,7 +26,7 @@ Grid1D<T>::Grid1D(const T& Xi, const arma::vec& yi, const GridParams<T>& PG) {
     if (!LambdaU) {
         G_ncols = PG.G_ncols;
     } else {
-        G_ncols = PG.Lambdas.n_rows; // override the user's ncols if LambdaU = 1
+        G_ncols = PG.Lambdas.rows(); // override the user's ncols if LambdaU = 1
     }
     
     G.reserve(G_ncols);
@@ -49,45 +52,45 @@ Grid1D<T>::Grid1D(const T& Xi, const arma::vec& yi, const GridParams<T>& PG) {
 template <class T>
 Grid1D<T>::~Grid1D() {
     // delete all dynamically allocated memory
-    delete P.Xtr;
-    delete P.ytX;
-    delete P.D;
-    delete P.r;
+    // delete P.Xtr;
+    // delete P.ytX;
+    // delete P.D;
+    // delete P.r;
 }
 
 
 template <class T>
 std::vector<std::unique_ptr<FitResult<T>>> Grid1D<T>::Fit() {
-    
+
     if (P.Specs.L0 || P.Specs.L0L2 || P.Specs.L0L1) {
         bool scaledown = false;
         
         double Lipconst;
-        arma::vec Xtrarma;
+        Eigen::ArrayXd Xtrarma;
         if (P.Specs.Logistic) {
             if (!XtrAvailable) {
-                Xtrarma = 0.5 * arma::abs(y->t() * *X).t();
+                Xtrarma = 0.5 * (y.transpose().matrix() * *X).array().abs().transpose();
             } // = gradient of logistic loss at zero}
             Lipconst = 0.25 + 2 * P.ModelParams[2];
         } else if (P.Specs.SquaredHinge) {
             if (!XtrAvailable) {
                 // gradient of loss function at zero
-                Xtrarma = 2 * arma::abs(y->t() * *X).t();
+                Xtrarma = 2 * (y.transpose().matrix() * *X).array().abs().transpose();
             } 
             Lipconst = 2 + 2 * P.ModelParams[2];
         } else {
             if (!XtrAvailable) {
-                *ytX =  y->t() * *X;
-                Xtrarma = arma::abs(*ytX).t(); // Least squares
+                ytX = y.transpose().matrix() * *X;
+                Xtrarma = ytX.array().abs().transpose(); // Least squares
             }
             Lipconst = 1 + 2 * P.ModelParams[2];
-            *P.r = *y - P.b0; // B = 0 initially
+            P.r = y - P.b0; // B = 0 initially
         }
         
         double ytXmax;
         if (!XtrAvailable) {
-            *Xtr = arma::conv_to< std::vector<double> >::from(Xtrarma);
-            ytXmax = arma::max(Xtrarma);
+            Xtr = std::vector<double>(Xtrarma.data(), Xtrarma.data() + Xtrarma.rows() * Xtrarma.cols());
+            ytXmax = Xtrarma.maxCoeff();
         } else {
             ytXmax = ytXmax2d;
         }
@@ -139,21 +142,21 @@ std::vector<std::unique_ptr<FitResult<T>>> Grid1D<T>::Fit() {
                 std::iota(idx.begin(), idx.end(), 0); // make global class var later
                 // Exclude the first NoSelectK features from sorting.
                 if (PartialSort && p > 5000 + NoSelectK)
-                    std::partial_sort(idx.begin() + NoSelectK, idx.begin() + 5000 + NoSelectK, idx.end(), [this](std::size_t i1, std::size_t i2) {return (*Xtr)[i1] > (*Xtr)[i2] ;});
+                    std::partial_sort(idx.begin() + NoSelectK, idx.begin() + 5000 + NoSelectK, idx.end(), [this](std::size_t i1, std::size_t i2) {return Xtr[i1] > Xtr[i2] ;});
                 else
-                    std::sort(idx.begin() + NoSelectK, idx.end(), [this](std::size_t i1, std::size_t i2) {return (*Xtr)[i1] > (*Xtr)[i2] ;});
+                    std::sort(idx.begin() + NoSelectK, idx.end(), [this](std::size_t i1, std::size_t i2) {return Xtr[i1] > Xtr[i2] ;});
                 P.CyclingOrder = 'u';
                 P.Uorder = idx; // can be made faster
                 
                 //
-                Xrmax = (*Xtr)[idx[NoSelectK]];
+                Xrmax = Xtr[idx[NoSelectK]];
                 
                 if (i > 0) {
                     std::vector<std::size_t> Sp = nnzIndicies(prevresult->B);
                     
                     for(std::size_t l = NoSelectK; l < p; ++l) {
                         if ( std::binary_search(Sp.begin(), Sp.end(), idx[l]) == false ) {
-                            Xrmax = (*Xtr)[idx[l]];
+                            Xrmax = Xtr[idx[l]];
                             //std::cout<<"Grid Iteration: "<<i<<" Xrmax= "<<Xrmax<<std::endl;
                             break;
                         }
@@ -179,20 +182,31 @@ std::vector<std::unique_ptr<FitResult<T>>> Grid1D<T>::Fit() {
            
             if (!currentskip) {
             
-                auto Model = make_CD(*X, *y, P);
+                auto Model = make_CD(*X, y, P);
+              
+                //Rcpp::Rcout << "Grid1D: Model->Fit"<< print_i++ << "\n";
+                //std::this_thread::sleep_for(std::chrono::milliseconds(100));
                 
                 std::unique_ptr<FitResult<T>> result(new FitResult<T>);
                 *result = Model->Fit();
     
+                //Rcpp::Rcout << "Grid1D: Model->Fit DONE"<< print_i++ << "\n";
+                //std::this_thread::sleep_for(std::chrono::milliseconds(100));
                 delete Model;
                 
+                //Rcpp::Rcout << "Grid1D:"<< print_i++ << "\n";
+                //std::this_thread::sleep_for(std::chrono::milliseconds(100));
                 scaledown = false;
                 if (i >= 1) {
+                    //Rcpp::Rcout << "Grid1D:"<< print_i++ << "\n";
+                    //std::this_thread::sleep_for(std::chrono::milliseconds(100));
                     std::vector<std::size_t> Spold = nnzIndicies(prevresult->B);
-      
+                    //Rcpp::Rcout << "Grid1D:"<< print_i++ << "\n";
+                    //std::this_thread::sleep_for(std::chrono::milliseconds(100));
                     std::vector<std::size_t> Spnew = nnzIndicies(result->B);
                    
                     bool samesupp = false;
+                    Rcpp::Rcout << "|Spold|: " << Spold.size() << ", |Spnew|: " << Spnew.size() <<" \n";
                     
                     if (Spold == Spnew) {
                         samesupp = true;
@@ -206,6 +220,9 @@ std::vector<std::unique_ptr<FitResult<T>>> Grid1D<T>::Fit() {
                     // } // got same solution
                 }
                 
+                //Rcpp::Rcout << "Grid1D: Model Spold"<< print_i++ << "\n";
+                //std::this_thread::sleep_for(std::chrono::milliseconds(100));
+                
                 //else {scaledown = false;}
                 G.push_back(std::move(result));
                 
@@ -214,10 +231,14 @@ std::vector<std::unique_ptr<FitResult<T>>> Grid1D<T>::Fit() {
                     break;
                 }
                 //result->B.t().print();
-                P.InitialSol = &(G.back()->B);
+                P.InitialSol = G.back()->B;
                 P.b0 = G.back()->b0;
+                
                 // Udate: After 1.1.0, P.r is automatically updated by the previous call to CD
                 //*P.r = G.back()->r;
+                
+                //Rcpp::Rcout << "Grid1D:  G.back()->B;"<< print_i++ << "\n";
+                //std::this_thread::sleep_for(std::chrono::milliseconds(100));
                 
             }
             
@@ -234,5 +255,5 @@ std::vector<std::unique_ptr<FitResult<T>>> Grid1D<T>::Fit() {
 }
 
 
-template class Grid1D<arma::mat>;
-template class Grid1D<arma::sp_mat>;
+template class Grid1D<Eigen::MatrixXd>;
+template class Grid1D<Eigen::SparseMatrix<double>>;

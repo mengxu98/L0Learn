@@ -1,90 +1,71 @@
 #include "BetaVector.h"
 
 /*
- * arma::vec implementation
+ * Eigen::VectorXd implementation
  */
 
-std::vector<std::size_t> nnzIndicies(const arma::vec& B){
-    // Returns a vector of the Non Zero Indicies of B
-    const arma::ucolvec nnzs_indicies = arma::find(B);
-    return arma::conv_to<std::vector<std::size_t>>::from(nnzs_indicies); 
-}
-
-std::vector<std::size_t> nnzIndicies(const arma::sp_mat& B){
+std::vector<std::size_t> nnzIndicies(const Eigen::VectorXd& B, const std::size_t start){
     // Returns a vector of the Non Zero Indicies of B
     std::vector<std::size_t> S;
-    arma::sp_mat::const_iterator it;
-    const arma::sp_mat::const_iterator it_end = B.end();
-    for(it = B.begin(); it != it_end; ++it)
-    {
-        S.push_back(it.row());
-    }
-    return S; 
-}
-
-std::vector<std::size_t> nnzIndicies(const arma::vec& B, const std::size_t low){
-    // Returns a vector of the Non Zero Indicies of a slice of B starting at low
-    // This is for NoSelectK situations
-    const arma::vec B_slice = B.subvec(low, B.n_rows-1);
-    const arma::ucolvec nnzs_indicies = arma::find(B_slice);
-    return arma::conv_to<std::vector<std::size_t>>::from(nnzs_indicies); 
-}
-
-std::vector<std::size_t> nnzIndicies(const arma::sp_mat& B, const std::size_t low){
-    // Returns a vector of the Non Zero Indicies of B
-    std::vector<std::size_t> S;
-    
-    
-    arma::sp_mat::const_iterator it;
-    const arma::sp_mat::const_iterator it_end = B.end();
-    
-    
-    for(it = B.begin(); it != it_end; ++it)
-    {
-        if (it.row() >= low){
-            S.push_back(it.row());
+    std::size_t nrows = B.rows();
+    for (std::size_t i = start; i <= nrows; i++){
+        if (B.coeff(i) != 0){
+            S.push_back(i);
         }
     }
-    return S; 
+    return S;
+}
+
+std::vector<std::size_t> nnzIndicies(const Eigen::SparseVector<double>& B, const std::size_t start){
+    // Returns a vector of the Non Zero Indicies of B
+    std::vector<std::size_t> S;
+    for (Eigen::SparseVector<double>::InnerIterator it(B); it; ++it)
+    {
+        if (it.index() >= start)
+        {
+            S.push_back(it.index());    
+        }
+    }
+    return S;
 }
 
 
-std::size_t n_nonzero(const arma::vec& B){
-    const arma::vec nnzs = arma::nonzeros(B);
-    return nnzs.n_rows;
+std::size_t n_nonzero(const Eigen::VectorXd& B){
+    const auto nnzs = (B.array() != 0);
+    return nnzs.count();
     
 }
 
-std::size_t n_nonzero(const arma::sp_mat& B){
-    return B.n_nonzero;
+std::size_t n_nonzero(const  Eigen::SparseVector<double>& B){
+    return B.nonZeros();
     
 }
 
-bool has_same_support(const arma::vec& B1, const arma::vec& B2){
-    if (B1.size() != B2.size()){
+bool has_same_support(const Eigen::VectorXd& B1, const Eigen::VectorXd& B2){
+    if (B1.rows() != B2.rows()){
         return false;
     }
-    std::size_t n = B1.n_rows;
+    std::size_t n = B1.rows();
     
     bool same_support = true;
     for (std::size_t i = 0; i < n; i++){
-        same_support = same_support && ((B1.at(i) != 0) == (B2.at(i) != 0));
+        same_support = same_support && ((B1.coeff(i) != 0) == (B2.coeff(i) != 0));
     }
     return same_support;
 }
 
-bool has_same_support(const arma::sp_mat& B1, const arma::sp_mat& B2){
+bool has_same_support(const Eigen::SparseVector<double>& B1, const  Eigen::SparseVector<double>& B2){
     
-    if (B1.n_nonzero != B2.n_nonzero) {
+    if (B1.nonZeros() != B2.nonZeros()) {
         return false;
     } else {  // same number of nnz and Supp is sorted
-        arma::sp_mat::const_iterator i1, i2;
-        const arma::sp_mat::const_iterator i1_end = B1.end();
+
+        Eigen::SparseVector<double>::InnerIterator it1(B1);
+        Eigen::SparseVector<double>::InnerIterator it2(B2);
         
-        
-        for(i1 = B1.begin(), i2 = B2.begin(); i1 != i1_end; ++i1, ++i2)
+        for(; it1 ; ++it1, ++it2)
         {
-            if(i1.row() != i2.row())
+            if(it1.index() != it2.index())
             {
                 return false;
             }

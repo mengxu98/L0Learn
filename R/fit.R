@@ -281,6 +281,7 @@ L0Learn.fit <- function(x, y, loss="SquaredError", penalty="L0", algorithm="CD",
 	# Find potential support sizes exceeding maxSuppSize and remove them (this is due to
 	# the C++ core whose last solution can exceed maxSuppSize
 	for (i in 1:length(M$SuppSize)){
+	        print(M$beta[[i]]@Dim)
 			last = length(M$SuppSize[[i]])
 			if (M$SuppSize[[i]][last] > maxSuppSize){
 					if (last == 1){

@@ -2,18 +2,19 @@
 // Generator token: 10BE3573-1514-4C36-9D1C-5A225CD40393
 
 #include <RcppArmadillo.h>
+#include <RcppEigen.h>
 #include <Rcpp.h>
 
 using namespace Rcpp;
 
 // L0LearnFit_sparse
-Rcpp::List L0LearnFit_sparse(const arma::sp_mat& X, const arma::vec& y, const std::string Loss, const std::string Penalty, const std::string Algorithm, const std::size_t NnzStopNum, const std::size_t G_ncols, const std::size_t G_nrows, const double Lambda2Max, const double Lambda2Min, const bool PartialSort, const std::size_t MaxIters, const double rtol, const double atol, const bool ActiveSet, const std::size_t ActiveSetNum, const std::size_t MaxNumSwaps, const double ScaleDownFactor, const std::size_t ScreenSize, const bool LambdaU, const std::vector< std::vector<double> > Lambdas, const std::size_t ExcludeFirstK, const bool Intercept, const bool withBounds, const arma::vec& Lows, const arma::vec& Highs);
+Rcpp::List L0LearnFit_sparse(const Eigen::SparseMatrix<double>& X, const Eigen::ArrayXd& y, const std::string Loss, const std::string Penalty, const std::string Algorithm, const std::size_t NnzStopNum, const std::size_t G_ncols, const std::size_t G_nrows, const double Lambda2Max, const double Lambda2Min, const bool PartialSort, const std::size_t MaxIters, const double rtol, const double atol, const bool ActiveSet, const std::size_t ActiveSetNum, const std::size_t MaxNumSwaps, const double ScaleDownFactor, const std::size_t ScreenSize, const bool LambdaU, const std::vector< std::vector<double> > Lambdas, const std::size_t ExcludeFirstK, const bool Intercept, const bool withBounds, const Eigen::ArrayXd& Lows, const Eigen::ArrayXd& Highs);
 RcppExport SEXP _L0Learn_L0LearnFit_sparse(SEXP XSEXP, SEXP ySEXP, SEXP LossSEXP, SEXP PenaltySEXP, SEXP AlgorithmSEXP, SEXP NnzStopNumSEXP, SEXP G_ncolsSEXP, SEXP G_nrowsSEXP, SEXP Lambda2MaxSEXP, SEXP Lambda2MinSEXP, SEXP PartialSortSEXP, SEXP MaxItersSEXP, SEXP rtolSEXP, SEXP atolSEXP, SEXP ActiveSetSEXP, SEXP ActiveSetNumSEXP, SEXP MaxNumSwapsSEXP, SEXP ScaleDownFactorSEXP, SEXP ScreenSizeSEXP, SEXP LambdaUSEXP, SEXP LambdasSEXP, SEXP ExcludeFirstKSEXP, SEXP InterceptSEXP, SEXP withBoundsSEXP, SEXP LowsSEXP, SEXP HighsSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< const arma::sp_mat& >::type X(XSEXP);
-    Rcpp::traits::input_parameter< const arma::vec& >::type y(ySEXP);
+    Rcpp::traits::input_parameter< const Eigen::SparseMatrix<double>& >::type X(XSEXP);
+    Rcpp::traits::input_parameter< const Eigen::ArrayXd& >::type y(ySEXP);
     Rcpp::traits::input_parameter< const std::string >::type Loss(LossSEXP);
     Rcpp::traits::input_parameter< const std::string >::type Penalty(PenaltySEXP);
     Rcpp::traits::input_parameter< const std::string >::type Algorithm(AlgorithmSEXP);
@@ -36,20 +37,20 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< const std::size_t >::type ExcludeFirstK(ExcludeFirstKSEXP);
     Rcpp::traits::input_parameter< const bool >::type Intercept(InterceptSEXP);
     Rcpp::traits::input_parameter< const bool >::type withBounds(withBoundsSEXP);
-    Rcpp::traits::input_parameter< const arma::vec& >::type Lows(LowsSEXP);
-    Rcpp::traits::input_parameter< const arma::vec& >::type Highs(HighsSEXP);
+    Rcpp::traits::input_parameter< const Eigen::ArrayXd& >::type Lows(LowsSEXP);
+    Rcpp::traits::input_parameter< const Eigen::ArrayXd& >::type Highs(HighsSEXP);
     rcpp_result_gen = Rcpp::wrap(L0LearnFit_sparse(X, y, Loss, Penalty, Algorithm, NnzStopNum, G_ncols, G_nrows, Lambda2Max, Lambda2Min, PartialSort, MaxIters, rtol, atol, ActiveSet, ActiveSetNum, MaxNumSwaps, ScaleDownFactor, ScreenSize, LambdaU, Lambdas, ExcludeFirstK, Intercept, withBounds, Lows, Highs));
     return rcpp_result_gen;
 END_RCPP
 }
 // L0LearnFit_dense
-Rcpp::List L0LearnFit_dense(const arma::mat& X, const arma::vec& y, const std::string Loss, const std::string Penalty, const std::string Algorithm, const std::size_t NnzStopNum, const std::size_t G_ncols, const std::size_t G_nrows, const double Lambda2Max, const double Lambda2Min, const bool PartialSort, const std::size_t MaxIters, const double rtol, const double atol, const bool ActiveSet, const std::size_t ActiveSetNum, const std::size_t MaxNumSwaps, const double ScaleDownFactor, const std::size_t ScreenSize, const bool LambdaU, const std::vector< std::vector<double> > Lambdas, const std::size_t ExcludeFirstK, const bool Intercept, const bool withBounds, const arma::vec& Lows, const arma::vec& Highs);
+Rcpp::List L0LearnFit_dense(const Eigen::MatrixXd& X, const Eigen::ArrayXd& y, const std::string Loss, const std::string Penalty, const std::string Algorithm, const std::size_t NnzStopNum, const std::size_t G_ncols, const std::size_t G_nrows, const double Lambda2Max, const double Lambda2Min, const bool PartialSort, const std::size_t MaxIters, const double rtol, const double atol, const bool ActiveSet, const std::size_t ActiveSetNum, const std::size_t MaxNumSwaps, const double ScaleDownFactor, const std::size_t ScreenSize, const bool LambdaU, const std::vector< std::vector<double> > Lambdas, const std::size_t ExcludeFirstK, const bool Intercept, const bool withBounds, const Eigen::ArrayXd& Lows, const Eigen::ArrayXd& Highs);
 RcppExport SEXP _L0Learn_L0LearnFit_dense(SEXP XSEXP, SEXP ySEXP, SEXP LossSEXP, SEXP PenaltySEXP, SEXP AlgorithmSEXP, SEXP NnzStopNumSEXP, SEXP G_ncolsSEXP, SEXP G_nrowsSEXP, SEXP Lambda2MaxSEXP, SEXP Lambda2MinSEXP, SEXP PartialSortSEXP, SEXP MaxItersSEXP, SEXP rtolSEXP, SEXP atolSEXP, SEXP ActiveSetSEXP, SEXP ActiveSetNumSEXP, SEXP MaxNumSwapsSEXP, SEXP ScaleDownFactorSEXP, SEXP ScreenSizeSEXP, SEXP LambdaUSEXP, SEXP LambdasSEXP, SEXP ExcludeFirstKSEXP, SEXP InterceptSEXP, SEXP withBoundsSEXP, SEXP LowsSEXP, SEXP HighsSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< const arma::mat& >::type X(XSEXP);
-    Rcpp::traits::input_parameter< const arma::vec& >::type y(ySEXP);
+    Rcpp::traits::input_parameter< const Eigen::MatrixXd& >::type X(XSEXP);
+    Rcpp::traits::input_parameter< const Eigen::ArrayXd& >::type y(ySEXP);
     Rcpp::traits::input_parameter< const std::string >::type Loss(LossSEXP);
     Rcpp::traits::input_parameter< const std::string >::type Penalty(PenaltySEXP);
     Rcpp::traits::input_parameter< const std::string >::type Algorithm(AlgorithmSEXP);
@@ -72,20 +73,20 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< const std::size_t >::type ExcludeFirstK(ExcludeFirstKSEXP);
     Rcpp::traits::input_parameter< const bool >::type Intercept(InterceptSEXP);
     Rcpp::traits::input_parameter< const bool >::type withBounds(withBoundsSEXP);
-    Rcpp::traits::input_parameter< const arma::vec& >::type Lows(LowsSEXP);
-    Rcpp::traits::input_parameter< const arma::vec& >::type Highs(HighsSEXP);
+    Rcpp::traits::input_parameter< const Eigen::ArrayXd& >::type Lows(LowsSEXP);
+    Rcpp::traits::input_parameter< const Eigen::ArrayXd& >::type Highs(HighsSEXP);
     rcpp_result_gen = Rcpp::wrap(L0LearnFit_dense(X, y, Loss, Penalty, Algorithm, NnzStopNum, G_ncols, G_nrows, Lambda2Max, Lambda2Min, PartialSort, MaxIters, rtol, atol, ActiveSet, ActiveSetNum, MaxNumSwaps, ScaleDownFactor, ScreenSize, LambdaU, Lambdas, ExcludeFirstK, Intercept, withBounds, Lows, Highs));
     return rcpp_result_gen;
 END_RCPP
 }
 // L0LearnCV_sparse
-Rcpp::List L0LearnCV_sparse(const arma::sp_mat& X, const arma::vec& y, const std::string Loss, const std::string Penalty, const std::string Algorithm, const std::size_t NnzStopNum, const std::size_t G_ncols, const std::size_t G_nrows, const double Lambda2Max, const double Lambda2Min, const bool PartialSort, const std::size_t MaxIters, const double rtol, const double atol, const bool ActiveSet, const std::size_t ActiveSetNum, const std::size_t MaxNumSwaps, const double ScaleDownFactor, const std::size_t ScreenSize, const bool LambdaU, const std::vector< std::vector<double> > Lambdas, const std::size_t nfolds, const double seed, const std::size_t ExcludeFirstK, const bool Intercept, const bool withBounds, const arma::vec& Lows, const arma::vec& Highs);
+Rcpp::List L0LearnCV_sparse(const Eigen::SparseMatrix<double>& X, const Eigen::ArrayXd& y, const std::string Loss, const std::string Penalty, const std::string Algorithm, const std::size_t NnzStopNum, const std::size_t G_ncols, const std::size_t G_nrows, const double Lambda2Max, const double Lambda2Min, const bool PartialSort, const std::size_t MaxIters, const double rtol, const double atol, const bool ActiveSet, const std::size_t ActiveSetNum, const std::size_t MaxNumSwaps, const double ScaleDownFactor, const std::size_t ScreenSize, const bool LambdaU, const std::vector< std::vector<double> > Lambdas, const std::size_t nfolds, const double seed, const std::size_t ExcludeFirstK, const bool Intercept, const bool withBounds, const Eigen::ArrayXd& Lows, const Eigen::ArrayXd& Highs);
 RcppExport SEXP _L0Learn_L0LearnCV_sparse(SEXP XSEXP, SEXP ySEXP, SEXP LossSEXP, SEXP PenaltySEXP, SEXP AlgorithmSEXP, SEXP NnzStopNumSEXP, SEXP G_ncolsSEXP, SEXP G_nrowsSEXP, SEXP Lambda2MaxSEXP, SEXP Lambda2MinSEXP, SEXP PartialSortSEXP, SEXP MaxItersSEXP, SEXP rtolSEXP, SEXP atolSEXP, SEXP ActiveSetSEXP, SEXP ActiveSetNumSEXP, SEXP MaxNumSwapsSEXP, SEXP ScaleDownFactorSEXP, SEXP ScreenSizeSEXP, SEXP LambdaUSEXP, SEXP LambdasSEXP, SEXP nfoldsSEXP, SEXP seedSEXP, SEXP ExcludeFirstKSEXP, SEXP InterceptSEXP, SEXP withBoundsSEXP, SEXP LowsSEXP, SEXP HighsSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< const arma::sp_mat& >::type X(XSEXP);
-    Rcpp::traits::input_parameter< const arma::vec& >::type y(ySEXP);
+    Rcpp::traits::input_parameter< const Eigen::SparseMatrix<double>& >::type X(XSEXP);
+    Rcpp::traits::input_parameter< const Eigen::ArrayXd& >::type y(ySEXP);
     Rcpp::traits::input_parameter< const std::string >::type Loss(LossSEXP);
     Rcpp::traits::input_parameter< const std::string >::type Penalty(PenaltySEXP);
     Rcpp::traits::input_parameter< const std::string >::type Algorithm(AlgorithmSEXP);
@@ -110,20 +111,20 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< const std::size_t >::type ExcludeFirstK(ExcludeFirstKSEXP);
     Rcpp::traits::input_parameter< const bool >::type Intercept(InterceptSEXP);
     Rcpp::traits::input_parameter< const bool >::type withBounds(withBoundsSEXP);
-    Rcpp::traits::input_parameter< const arma::vec& >::type Lows(LowsSEXP);
-    Rcpp::traits::input_parameter< const arma::vec& >::type Highs(HighsSEXP);
+    Rcpp::traits::input_parameter< const Eigen::ArrayXd& >::type Lows(LowsSEXP);
+    Rcpp::traits::input_parameter< const Eigen::ArrayXd& >::type Highs(HighsSEXP);
     rcpp_result_gen = Rcpp::wrap(L0LearnCV_sparse(X, y, Loss, Penalty, Algorithm, NnzStopNum, G_ncols, G_nrows, Lambda2Max, Lambda2Min, PartialSort, MaxIters, rtol, atol, ActiveSet, ActiveSetNum, MaxNumSwaps, ScaleDownFactor, ScreenSize, LambdaU, Lambdas, nfolds, seed, ExcludeFirstK, Intercept, withBounds, Lows, Highs));
     return rcpp_result_gen;
 END_RCPP
 }
 // L0LearnCV_dense
-Rcpp::List L0LearnCV_dense(const arma::mat& X, const arma::vec& y, const std::string Loss, const std::string Penalty, const std::string Algorithm, const std::size_t NnzStopNum, const std::size_t G_ncols, const std::size_t G_nrows, const double Lambda2Max, const double Lambda2Min, const bool PartialSort, const std::size_t MaxIters, const double rtol, const double atol, const bool ActiveSet, const std::size_t ActiveSetNum, const std::size_t MaxNumSwaps, const double ScaleDownFactor, const std::size_t ScreenSize, const bool LambdaU, const std::vector< std::vector<double> > Lambdas, const std::size_t nfolds, const double seed, const std::size_t ExcludeFirstK, const bool Intercept, const bool withBounds, const arma::vec& Lows, const arma::vec& Highs);
+Rcpp::List L0LearnCV_dense(const Eigen::MatrixXd& X, const Eigen::ArrayXd& y, const std::string Loss, const std::string Penalty, const std::string Algorithm, const std::size_t NnzStopNum, const std::size_t G_ncols, const std::size_t G_nrows, const double Lambda2Max, const double Lambda2Min, const bool PartialSort, const std::size_t MaxIters, const double rtol, const double atol, const bool ActiveSet, const std::size_t ActiveSetNum, const std::size_t MaxNumSwaps, const double ScaleDownFactor, const std::size_t ScreenSize, const bool LambdaU, const std::vector< std::vector<double> > Lambdas, const std::size_t nfolds, const double seed, const std::size_t ExcludeFirstK, const bool Intercept, const bool withBounds, const Eigen::ArrayXd& Lows, const Eigen::ArrayXd& Highs);
 RcppExport SEXP _L0Learn_L0LearnCV_dense(SEXP XSEXP, SEXP ySEXP, SEXP LossSEXP, SEXP PenaltySEXP, SEXP AlgorithmSEXP, SEXP NnzStopNumSEXP, SEXP G_ncolsSEXP, SEXP G_nrowsSEXP, SEXP Lambda2MaxSEXP, SEXP Lambda2MinSEXP, SEXP PartialSortSEXP, SEXP MaxItersSEXP, SEXP rtolSEXP, SEXP atolSEXP, SEXP ActiveSetSEXP, SEXP ActiveSetNumSEXP, SEXP MaxNumSwapsSEXP, SEXP ScaleDownFactorSEXP, SEXP ScreenSizeSEXP, SEXP LambdaUSEXP, SEXP LambdasSEXP, SEXP nfoldsSEXP, SEXP seedSEXP, SEXP ExcludeFirstKSEXP, SEXP InterceptSEXP, SEXP withBoundsSEXP, SEXP LowsSEXP, SEXP HighsSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< const arma::mat& >::type X(XSEXP);
-    Rcpp::traits::input_parameter< const arma::vec& >::type y(ySEXP);
+    Rcpp::traits::input_parameter< const Eigen::MatrixXd& >::type X(XSEXP);
+    Rcpp::traits::input_parameter< const Eigen::ArrayXd& >::type y(ySEXP);
     Rcpp::traits::input_parameter< const std::string >::type Loss(LossSEXP);
     Rcpp::traits::input_parameter< const std::string >::type Penalty(PenaltySEXP);
     Rcpp::traits::input_parameter< const std::string >::type Algorithm(AlgorithmSEXP);
@@ -148,8 +149,8 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< const std::size_t >::type ExcludeFirstK(ExcludeFirstKSEXP);
     Rcpp::traits::input_parameter< const bool >::type Intercept(InterceptSEXP);
     Rcpp::traits::input_parameter< const bool >::type withBounds(withBoundsSEXP);
-    Rcpp::traits::input_parameter< const arma::vec& >::type Lows(LowsSEXP);
-    Rcpp::traits::input_parameter< const arma::vec& >::type Highs(HighsSEXP);
+    Rcpp::traits::input_parameter< const Eigen::ArrayXd& >::type Lows(LowsSEXP);
+    Rcpp::traits::input_parameter< const Eigen::ArrayXd& >::type Highs(HighsSEXP);
     rcpp_result_gen = Rcpp::wrap(L0LearnCV_dense(X, y, Loss, Penalty, Algorithm, NnzStopNum, G_ncols, G_nrows, Lambda2Max, Lambda2Min, PartialSort, MaxIters, rtol, atol, ActiveSet, ActiveSetNum, MaxNumSwaps, ScaleDownFactor, ScreenSize, LambdaU, Lambdas, nfolds, seed, ExcludeFirstK, Intercept, withBounds, Lows, Highs));
     return rcpp_result_gen;
 END_RCPP
@@ -167,220 +168,195 @@ BEGIN_RCPP
 END_RCPP
 }
 // R_matrix_column_get_dense
-arma::vec R_matrix_column_get_dense(const arma::mat& mat, int col);
+Eigen::ArrayXd R_matrix_column_get_dense(const Eigen::MatrixXd& mat, int col);
 RcppExport SEXP _L0Learn_R_matrix_column_get_dense(SEXP matSEXP, SEXP colSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< const arma::mat& >::type mat(matSEXP);
+    Rcpp::traits::input_parameter< const Eigen::MatrixXd& >::type mat(matSEXP);
     Rcpp::traits::input_parameter< int >::type col(colSEXP);
     rcpp_result_gen = Rcpp::wrap(R_matrix_column_get_dense(mat, col));
     return rcpp_result_gen;
 END_RCPP
 }
 // R_matrix_column_get_sparse
-arma::vec R_matrix_column_get_sparse(const arma::sp_mat& mat, int col);
+Eigen::ArrayXd R_matrix_column_get_sparse(const Eigen::SparseMatrix<double>& mat, int col);
 RcppExport SEXP _L0Learn_R_matrix_column_get_sparse(SEXP matSEXP, SEXP colSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< const arma::sp_mat& >::type mat(matSEXP);
+    Rcpp::traits::input_parameter< const Eigen::SparseMatrix<double>& >::type mat(matSEXP);
     Rcpp::traits::input_parameter< int >::type col(colSEXP);
     rcpp_result_gen = Rcpp::wrap(R_matrix_column_get_sparse(mat, col));
     return rcpp_result_gen;
 END_RCPP
 }
 // R_matrix_rows_get_dense
-arma::mat R_matrix_rows_get_dense(const arma::mat& mat, const arma::ucolvec rows);
+Eigen::MatrixXd R_matrix_rows_get_dense(const Eigen::MatrixXd& mat, const std::vector<std::size_t> rows);
 RcppExport SEXP _L0Learn_R_matrix_rows_get_dense(SEXP matSEXP, SEXP rowsSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< const arma::mat& >::type mat(matSEXP);
-    Rcpp::traits::input_parameter< const arma::ucolvec >::type rows(rowsSEXP);
+    Rcpp::traits::input_parameter< const Eigen::MatrixXd& >::type mat(matSEXP);
+    Rcpp::traits::input_parameter< const std::vector<std::size_t> >::type rows(rowsSEXP);
     rcpp_result_gen = Rcpp::wrap(R_matrix_rows_get_dense(mat, rows));
     return rcpp_result_gen;
 END_RCPP
 }
 // R_matrix_rows_get_sparse
-arma::sp_mat R_matrix_rows_get_sparse(const arma::sp_mat& mat, const arma::ucolvec rows);
+Eigen::SparseMatrix<double> R_matrix_rows_get_sparse(const Eigen::SparseMatrix<double>& mat, const std::vector<std::size_t> rows);
 RcppExport SEXP _L0Learn_R_matrix_rows_get_sparse(SEXP matSEXP, SEXP rowsSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< const arma::sp_mat& >::type mat(matSEXP);
-    Rcpp::traits::input_parameter< const arma::ucolvec >::type rows(rowsSEXP);
+    Rcpp::traits::input_parameter< const Eigen::SparseMatrix<double>& >::type mat(matSEXP);
+    Rcpp::traits::input_parameter< const std::vector<std::size_t> >::type rows(rowsSEXP);
     rcpp_result_gen = Rcpp::wrap(R_matrix_rows_get_sparse(mat, rows));
     return rcpp_result_gen;
 END_RCPP
 }
-// R_matrix_vector_schur_product_dense
-arma::mat R_matrix_vector_schur_product_dense(const arma::mat& mat, const arma::vec& u);
-RcppExport SEXP _L0Learn_R_matrix_vector_schur_product_dense(SEXP matSEXP, SEXP uSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< const arma::mat& >::type mat(matSEXP);
-    Rcpp::traits::input_parameter< const arma::vec& >::type u(uSEXP);
-    rcpp_result_gen = Rcpp::wrap(R_matrix_vector_schur_product_dense(mat, u));
-    return rcpp_result_gen;
-END_RCPP
-}
-// R_matrix_vector_schur_product_sparse
-arma::sp_mat R_matrix_vector_schur_product_sparse(const arma::sp_mat& mat, const arma::vec& u);
-RcppExport SEXP _L0Learn_R_matrix_vector_schur_product_sparse(SEXP matSEXP, SEXP uSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< const arma::sp_mat& >::type mat(matSEXP);
-    Rcpp::traits::input_parameter< const arma::vec& >::type u(uSEXP);
-    rcpp_result_gen = Rcpp::wrap(R_matrix_vector_schur_product_sparse(mat, u));
-    return rcpp_result_gen;
-END_RCPP
-}
-// R_matrix_vector_divide_dense
-arma::mat R_matrix_vector_divide_dense(const arma::mat& mat, const arma::vec& u);
-RcppExport SEXP _L0Learn_R_matrix_vector_divide_dense(SEXP matSEXP, SEXP uSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< const arma::mat& >::type mat(matSEXP);
-    Rcpp::traits::input_parameter< const arma::vec& >::type u(uSEXP);
-    rcpp_result_gen = Rcpp::wrap(R_matrix_vector_divide_dense(mat, u));
-    return rcpp_result_gen;
-END_RCPP
-}
-// R_matrix_vector_divide_sparse
-arma::sp_mat R_matrix_vector_divide_sparse(const arma::sp_mat& mat, const arma::vec& u);
-RcppExport SEXP _L0Learn_R_matrix_vector_divide_sparse(SEXP matSEXP, SEXP uSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< const arma::sp_mat& >::type mat(matSEXP);
-    Rcpp::traits::input_parameter< const arma::vec& >::type u(uSEXP);
-    rcpp_result_gen = Rcpp::wrap(R_matrix_vector_divide_sparse(mat, u));
-    return rcpp_result_gen;
-END_RCPP
-}
 // R_matrix_column_sums_dense
-arma::rowvec R_matrix_column_sums_dense(const arma::mat& mat);
+Eigen::Array<double, 1, Eigen::Dynamic> R_matrix_column_sums_dense(const Eigen::MatrixXd& mat);
 RcppExport SEXP _L0Learn_R_matrix_column_sums_dense(SEXP matSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< const arma::mat& >::type mat(matSEXP);
+    Rcpp::traits::input_parameter< const Eigen::MatrixXd& >::type mat(matSEXP);
     rcpp_result_gen = Rcpp::wrap(R_matrix_column_sums_dense(mat));
     return rcpp_result_gen;
 END_RCPP
 }
 // R_matrix_column_sums_sparse
-arma::rowvec R_matrix_column_sums_sparse(const arma::sp_mat& mat);
+Eigen::Array<double, 1, Eigen::Dynamic> R_matrix_column_sums_sparse(const Eigen::SparseMatrix<double>& mat);
 RcppExport SEXP _L0Learn_R_matrix_column_sums_sparse(SEXP matSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< const arma::sp_mat& >::type mat(matSEXP);
+    Rcpp::traits::input_parameter< const Eigen::SparseMatrix<double>& >::type mat(matSEXP);
     rcpp_result_gen = Rcpp::wrap(R_matrix_column_sums_sparse(mat));
     return rcpp_result_gen;
 END_RCPP
 }
 // R_matrix_column_dot_dense
-double R_matrix_column_dot_dense(const arma::mat& mat, int col, const arma::vec u);
+double R_matrix_column_dot_dense(const Eigen::MatrixXd& mat, int col, const Eigen::ArrayXd u);
 RcppExport SEXP _L0Learn_R_matrix_column_dot_dense(SEXP matSEXP, SEXP colSEXP, SEXP uSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< const arma::mat& >::type mat(matSEXP);
+    Rcpp::traits::input_parameter< const Eigen::MatrixXd& >::type mat(matSEXP);
     Rcpp::traits::input_parameter< int >::type col(colSEXP);
-    Rcpp::traits::input_parameter< const arma::vec >::type u(uSEXP);
+    Rcpp::traits::input_parameter< const Eigen::ArrayXd >::type u(uSEXP);
     rcpp_result_gen = Rcpp::wrap(R_matrix_column_dot_dense(mat, col, u));
     return rcpp_result_gen;
 END_RCPP
 }
 // R_matrix_column_dot_sparse
-double R_matrix_column_dot_sparse(const arma::sp_mat& mat, int col, const arma::vec u);
+double R_matrix_column_dot_sparse(const Eigen::SparseMatrix<double>& mat, int col, const Eigen::ArrayXd u);
 RcppExport SEXP _L0Learn_R_matrix_column_dot_sparse(SEXP matSEXP, SEXP colSEXP, SEXP uSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< const arma::sp_mat& >::type mat(matSEXP);
+    Rcpp::traits::input_parameter< const Eigen::SparseMatrix<double>& >::type mat(matSEXP);
     Rcpp::traits::input_parameter< int >::type col(colSEXP);
-    Rcpp::traits::input_parameter< const arma::vec >::type u(uSEXP);
+    Rcpp::traits::input_parameter< const Eigen::ArrayXd >::type u(uSEXP);
     rcpp_result_gen = Rcpp::wrap(R_matrix_column_dot_sparse(mat, col, u));
     return rcpp_result_gen;
 END_RCPP
 }
-// R_matrix_column_mult_dense
-arma::vec R_matrix_column_mult_dense(const arma::mat& mat, int col, double u);
-RcppExport SEXP _L0Learn_R_matrix_column_mult_dense(SEXP matSEXP, SEXP colSEXP, SEXP uSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< const arma::mat& >::type mat(matSEXP);
-    Rcpp::traits::input_parameter< int >::type col(colSEXP);
-    Rcpp::traits::input_parameter< double >::type u(uSEXP);
-    rcpp_result_gen = Rcpp::wrap(R_matrix_column_mult_dense(mat, col, u));
-    return rcpp_result_gen;
-END_RCPP
-}
-// R_matrix_column_mult_sparse
-arma::vec R_matrix_column_mult_sparse(const arma::sp_mat& mat, int col, double u);
-RcppExport SEXP _L0Learn_R_matrix_column_mult_sparse(SEXP matSEXP, SEXP colSEXP, SEXP uSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< const arma::sp_mat& >::type mat(matSEXP);
-    Rcpp::traits::input_parameter< int >::type col(colSEXP);
-    Rcpp::traits::input_parameter< double >::type u(uSEXP);
-    rcpp_result_gen = Rcpp::wrap(R_matrix_column_mult_sparse(mat, col, u));
-    return rcpp_result_gen;
-END_RCPP
-}
 // R_matrix_normalize_dense
-Rcpp::List R_matrix_normalize_dense(arma::mat mat_norm);
+Rcpp::List R_matrix_normalize_dense(Eigen::MatrixXd mat_norm);
 RcppExport SEXP _L0Learn_R_matrix_normalize_dense(SEXP mat_normSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< arma::mat >::type mat_norm(mat_normSEXP);
+    Rcpp::traits::input_parameter< Eigen::MatrixXd >::type mat_norm(mat_normSEXP);
     rcpp_result_gen = Rcpp::wrap(R_matrix_normalize_dense(mat_norm));
     return rcpp_result_gen;
 END_RCPP
 }
 // R_matrix_normalize_sparse
-Rcpp::List R_matrix_normalize_sparse(arma::sp_mat mat_norm);
+Rcpp::List R_matrix_normalize_sparse(Eigen::SparseMatrix<double> mat_norm);
 RcppExport SEXP _L0Learn_R_matrix_normalize_sparse(SEXP mat_normSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< arma::sp_mat >::type mat_norm(mat_normSEXP);
+    Rcpp::traits::input_parameter< Eigen::SparseMatrix<double> >::type mat_norm(mat_normSEXP);
     rcpp_result_gen = Rcpp::wrap(R_matrix_normalize_sparse(mat_norm));
     return rcpp_result_gen;
 END_RCPP
 }
 // R_matrix_center_dense
-Rcpp::List R_matrix_center_dense(const arma::mat mat, arma::mat X_normalized, bool intercept);
+Rcpp::List R_matrix_center_dense(const Eigen::MatrixXd mat, Eigen::MatrixXd X_normalized, bool intercept);
 RcppExport SEXP _L0Learn_R_matrix_center_dense(SEXP matSEXP, SEXP X_normalizedSEXP, SEXP interceptSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< const arma::mat >::type mat(matSEXP);
-    Rcpp::traits::input_parameter< arma::mat >::type X_normalized(X_normalizedSEXP);
+    Rcpp::traits::input_parameter< const Eigen::MatrixXd >::type mat(matSEXP);
+    Rcpp::traits::input_parameter< Eigen::MatrixXd >::type X_normalized(X_normalizedSEXP);
     Rcpp::traits::input_parameter< bool >::type intercept(interceptSEXP);
     rcpp_result_gen = Rcpp::wrap(R_matrix_center_dense(mat, X_normalized, intercept));
     return rcpp_result_gen;
 END_RCPP
 }
 // R_matrix_center_sparse
-Rcpp::List R_matrix_center_sparse(const arma::sp_mat mat, arma::sp_mat X_normalized, bool intercept);
+Rcpp::List R_matrix_center_sparse(const Eigen::SparseMatrix<double> mat, Eigen::SparseMatrix<double> X_normalized, bool intercept);
 RcppExport SEXP _L0Learn_R_matrix_center_sparse(SEXP matSEXP, SEXP X_normalizedSEXP, SEXP interceptSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< const arma::sp_mat >::type mat(matSEXP);
-    Rcpp::traits::input_parameter< arma::sp_mat >::type X_normalized(X_normalizedSEXP);
+    Rcpp::traits::input_parameter< const Eigen::SparseMatrix<double> >::type mat(matSEXP);
+    Rcpp::traits::input_parameter< Eigen::SparseMatrix<double> >::type X_normalized(X_normalizedSEXP);
     Rcpp::traits::input_parameter< bool >::type intercept(interceptSEXP);
     rcpp_result_gen = Rcpp::wrap(R_matrix_center_sparse(mat, X_normalized, intercept));
+    return rcpp_result_gen;
+END_RCPP
+}
+// R_vector_subset
+std::vector<size_t> R_vector_subset(const std::vector<size_t> x, const std::vector<size_t> indicies);
+RcppExport SEXP _L0Learn_R_vector_subset(SEXP xSEXP, SEXP indiciesSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const std::vector<size_t> >::type x(xSEXP);
+    Rcpp::traits::input_parameter< const std::vector<size_t> >::type indicies(indiciesSEXP);
+    rcpp_result_gen = Rcpp::wrap(R_vector_subset(x, indicies));
+    return rcpp_result_gen;
+END_RCPP
+}
+// R_arg_sort
+std::vector<size_t> R_arg_sort(const Eigen::ArrayXd& x);
+RcppExport SEXP _L0Learn_R_arg_sort(SEXP xSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const Eigen::ArrayXd& >::type x(xSEXP);
+    rcpp_result_gen = Rcpp::wrap(R_arg_sort(x));
+    return rcpp_result_gen;
+END_RCPP
+}
+// R_make_predicitions_dense
+Eigen::ArrayXd R_make_predicitions_dense(const Eigen::MatrixXd& X, const Eigen::VectorXd& B, const double b0);
+RcppExport SEXP _L0Learn_R_make_predicitions_dense(SEXP XSEXP, SEXP BSEXP, SEXP b0SEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const Eigen::MatrixXd& >::type X(XSEXP);
+    Rcpp::traits::input_parameter< const Eigen::VectorXd& >::type B(BSEXP);
+    Rcpp::traits::input_parameter< const double >::type b0(b0SEXP);
+    rcpp_result_gen = Rcpp::wrap(R_make_predicitions_dense(X, B, b0));
+    return rcpp_result_gen;
+END_RCPP
+}
+// R_make_predicitions_sparse
+Eigen::ArrayXd R_make_predicitions_sparse(const Eigen::SparseMatrix<double>& X, const Eigen::VectorXd& B, const double b0);
+RcppExport SEXP _L0Learn_R_make_predicitions_sparse(SEXP XSEXP, SEXP BSEXP, SEXP b0SEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const Eigen::SparseMatrix<double>& >::type X(XSEXP);
+    Rcpp::traits::input_parameter< const Eigen::VectorXd& >::type B(BSEXP);
+    Rcpp::traits::input_parameter< const double >::type b0(b0SEXP);
+    rcpp_result_gen = Rcpp::wrap(R_make_predicitions_sparse(X, B, b0));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -395,20 +371,18 @@ static const R_CallMethodDef CallEntries[] = {
     {"_L0Learn_R_matrix_column_get_sparse", (DL_FUNC) &_L0Learn_R_matrix_column_get_sparse, 2},
     {"_L0Learn_R_matrix_rows_get_dense", (DL_FUNC) &_L0Learn_R_matrix_rows_get_dense, 2},
     {"_L0Learn_R_matrix_rows_get_sparse", (DL_FUNC) &_L0Learn_R_matrix_rows_get_sparse, 2},
-    {"_L0Learn_R_matrix_vector_schur_product_dense", (DL_FUNC) &_L0Learn_R_matrix_vector_schur_product_dense, 2},
-    {"_L0Learn_R_matrix_vector_schur_product_sparse", (DL_FUNC) &_L0Learn_R_matrix_vector_schur_product_sparse, 2},
-    {"_L0Learn_R_matrix_vector_divide_dense", (DL_FUNC) &_L0Learn_R_matrix_vector_divide_dense, 2},
-    {"_L0Learn_R_matrix_vector_divide_sparse", (DL_FUNC) &_L0Learn_R_matrix_vector_divide_sparse, 2},
     {"_L0Learn_R_matrix_column_sums_dense", (DL_FUNC) &_L0Learn_R_matrix_column_sums_dense, 1},
     {"_L0Learn_R_matrix_column_sums_sparse", (DL_FUNC) &_L0Learn_R_matrix_column_sums_sparse, 1},
     {"_L0Learn_R_matrix_column_dot_dense", (DL_FUNC) &_L0Learn_R_matrix_column_dot_dense, 3},
     {"_L0Learn_R_matrix_column_dot_sparse", (DL_FUNC) &_L0Learn_R_matrix_column_dot_sparse, 3},
-    {"_L0Learn_R_matrix_column_mult_dense", (DL_FUNC) &_L0Learn_R_matrix_column_mult_dense, 3},
-    {"_L0Learn_R_matrix_column_mult_sparse", (DL_FUNC) &_L0Learn_R_matrix_column_mult_sparse, 3},
     {"_L0Learn_R_matrix_normalize_dense", (DL_FUNC) &_L0Learn_R_matrix_normalize_dense, 1},
     {"_L0Learn_R_matrix_normalize_sparse", (DL_FUNC) &_L0Learn_R_matrix_normalize_sparse, 1},
     {"_L0Learn_R_matrix_center_dense", (DL_FUNC) &_L0Learn_R_matrix_center_dense, 3},
     {"_L0Learn_R_matrix_center_sparse", (DL_FUNC) &_L0Learn_R_matrix_center_sparse, 3},
+    {"_L0Learn_R_vector_subset", (DL_FUNC) &_L0Learn_R_vector_subset, 2},
+    {"_L0Learn_R_arg_sort", (DL_FUNC) &_L0Learn_R_arg_sort, 1},
+    {"_L0Learn_R_make_predicitions_dense", (DL_FUNC) &_L0Learn_R_make_predicitions_dense, 3},
+    {"_L0Learn_R_make_predicitions_sparse", (DL_FUNC) &_L0Learn_R_make_predicitions_sparse, 3},
     {NULL, NULL, 0}
 };
 
