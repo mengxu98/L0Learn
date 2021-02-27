@@ -1,9 +1,6 @@
 #include "Interface.h"
 // [[Rcpp::depends(RcppEigen)]]
 
-#include <chrono>
-#include <thread>
-
 template <typename T>
 GridParams<T> makeGridParams(const std::string Loss, const std::string Penalty,
                              const std::string Algorithm, const std::size_t NnzStopNum, const std::size_t G_ncols,
@@ -82,43 +79,34 @@ Rcpp::List _L0LearnFit(const T& X, const Eigen::ArrayXd& y, const std::string Lo
                        const bool Intercept,  const bool withBounds, const Eigen::ArrayXd &Lows,
                        const Eigen::ArrayXd &Highs){
 
-  int i = 0;
-  Rcpp::Rcout << ++i << "\n";
-  std::this_thread::sleep_for(std::chrono::milliseconds(100));
   GridParams<T> PG = makeGridParams<T>(Loss, Penalty, Algorithm, NnzStopNum, G_ncols, G_nrows,
                       Lambda2Max, Lambda2Min, PartialSort, MaxIters, rtol, atol, ActiveSet,
                       ActiveSetNum, MaxNumSwaps, ScaleDownFactor, ScreenSize,
                       LambdaU, Lambdas, ExcludeFirstK, Intercept, withBounds, Lows, Highs);
 
-  Rcpp::Rcout << ++i << "\n";
-  std::this_thread::sleep_for(std::chrono::milliseconds(100));
   Grid<T> G(X, y, PG);
-  Rcpp::Rcout << ++i << "\n";
-  std::this_thread::sleep_for(std::chrono::milliseconds(100));
   G.Fit();
 
   std::string FirstParameter = "lambda";
   std::string SecondParameter = "gamma";
 
   // Next Construct the list of Sparse Beta Matrices.
-
-  Rcpp::Rcout << ++i << "\n";
-  std::this_thread::sleep_for(std::chrono::milliseconds(100));
   auto p = X.cols();
-  std::vector<Eigen::SparseMatrix<double>> Bs(G.Lambda12.size());
+  std::vector<Eigen::SparseMatrix<double>> Bs;
 
   for (std::size_t i=0; i<G.Lambda12.size(); ++i) {
     // create the px(reg path size) sparse sparseMatrix
     Eigen::SparseMatrix<double> B(p,G.Solutions[i].size());
+    //Rcpp::Rcout << "B shape = (" << B.rows() << ", " << B.cols() << ")\n";
     for (unsigned int j=0; j<G.Solutions[i].size(); ++j) {
+      //Rcpp::Rcout << "|G.Solutions[" << i << "][" << j << "]| = " << G.Solutions[i][j].nonZeros() << "\n";
+      //Rcpp::Rcout << "G.Solutions[" << i << "][" << j << "].rows() = " << G.Solutions[i][j].rows() << "\n";
       B.col(j) = G.Solutions[i][j];
     }
 
     // append the sparse matrix
     Bs.push_back(B);
   }
-  Rcpp::Rcout << ++i << "\n";
-  std::this_thread::sleep_for(std::chrono::milliseconds(100));
 
   Rcpp::List l = Rcpp::List::create(Rcpp::Named(FirstParameter) = G.Lambda0,
                                     Rcpp::Named(SecondParameter) = G.Lambda12, // contains 0 in case of L0
@@ -192,7 +180,7 @@ Rcpp::List _L0LearnCV(const T& X, const Eigen::ArrayXd& y, const std::string Los
 
   std::size_t Ngamma = G.Lambda12.size();
 
-  std::vector<Eigen::MatrixXd> CVError (G.Solutions.size());
+  std::vector<Eigen::MatrixXd> CVError;
   //arma::field< arma::mat > CVError (G.Solutions.size());
 
   for (std::size_t i=0; i<G.Solutions.size(); ++i)

@@ -7,6 +7,7 @@
 #include "Grid.h"
 #include "GridParams.h"
 #include "FitResult.h"
+#include "logging.h"
 
 
 inline void to_arma_error() {

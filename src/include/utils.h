@@ -85,16 +85,14 @@ Eigen::SparseMatrix<double> inline matrix_rows_get(const Eigen::SparseMatrix<dou
     std::vector< Eigen::Triplet<double> > tripletList;
     std::size_t estimation_of_entries = mat.nonZeros() * vector_of_row_indices.size() / mat.rows();
     tripletList.reserve(estimation_of_entries);
-    //Rcpp::Rcout << "1\n";
-    //std::this_thread::sleep_for(std::chrono::milliseconds(100));
     
     auto vector_map = vector_indicies_dictionary(vector_of_row_indices);
     
     if (vector_map.size() != vector_of_row_indices.size()){
         Rcpp::stop("Does not support duplicate rows\n");
     }
-    //Rcpp::Rcout << "2\n";
-    //std::this_thread::sleep_for(std::chrono::milliseconds(100));
+
+    
     for (std::size_t k = 0; k < mat.outerSize(); ++k){
         for (Eigen::SparseMatrix<double>::InnerIterator it(mat, k); it; ++it){
             auto subset_row = vector_map.find(it.row());
@@ -105,25 +103,12 @@ Eigen::SparseMatrix<double> inline matrix_rows_get(const Eigen::SparseMatrix<dou
             }
         }
     }
-    //Rcpp::Rcout << "3\n";
-    //std::this_thread::sleep_for(std::chrono::milliseconds(100));
     
     Eigen::SparseMatrix<double> row_mat(vector_of_row_indices.size(), mat.cols());
-    
-    //Rcpp::Rcout << row_mat.size() << " \n";
-    //Rcpp::Rcout << "4\n";
-    //std::this_thread::sleep_for(std::chrono::milliseconds(100));
-    
-    // for (auto&x : tripletList){
-    //     Rcpp::Rcout << x.row() << ", " <<  x.col() << ", " << x.value() << "\n";
-    // }
-    //std::this_thread::sleep_for(std::chrono::milliseconds(10000));
     
     row_mat.setFromTriplets(tripletList.begin(), tripletList.end());
     row_mat.makeCompressed();
     
-    //Rcpp::Rcout << "5\n";
-    //std::this_thread::sleep_for(std::chrono::milliseconds(100));
     return row_mat;
 }
 

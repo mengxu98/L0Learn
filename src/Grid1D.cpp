@@ -8,15 +8,16 @@ template <class T>
 Grid1D<T>::Grid1D(const T& Xi, const Eigen::ArrayXd& yi, const GridParams<T>& PG) : y{yi}{
     // automatically selects lambda_0 (but assumes other lambdas are given in PG.P.ModelParams)
     
+    LOG("Grid1D Constructor");
     X = &Xi;
     p = Xi.cols();
     LambdaMinFactor = PG.LambdaMinFactor;
     ScaleDownFactor = PG.ScaleDownFactor;
     P = PG.P;
     P.Xtr = std::vector<double>(Xi.cols());
-    P.ytX = Eigen::RowVectorXd(Xi.cols());
-    P.D = std::map<std::size_t,Eigen::RowVectorXd>();
-    P.r = Eigen::ArrayXd(Xi.rows());
+    P.ytX = Eigen::RowVectorXd::Zero(Xi.cols());
+    //P.D = std::map<std::size_t,Eigen::RowVectorXd>();
+    P.r = Eigen::ArrayXd::Zero(Xi.rows());
     Xtr = P.Xtr;
     ytX = P.ytX;
     NoSelectK = P.NoSelectK;
@@ -62,11 +63,12 @@ Grid1D<T>::~Grid1D() {
 template <class T>
 std::vector<std::unique_ptr<FitResult<T>>> Grid1D<T>::Fit() {
 
+    LOG("Grid1D Fit");
     if (P.Specs.L0 || P.Specs.L0L2 || P.Specs.L0L1) {
         bool scaledown = false;
         
         double Lipconst;
-        Eigen::ArrayXd Xtrarma;
+        Eigen::ArrayXd Xtrarma = Eigen::ArrayXd::Zero(y.rows());
         if (P.Specs.Logistic) {
             if (!XtrAvailable) {
                 Xtrarma = 0.5 * (y.transpose().matrix() * *X).array().abs().transpose();
@@ -157,6 +159,7 @@ std::vector<std::unique_ptr<FitResult<T>>> Grid1D<T>::Fit() {
                     for(std::size_t l = NoSelectK; l < p; ++l) {
                         if ( std::binary_search(Sp.begin(), Sp.end(), idx[l]) == false ) {
                             Xrmax = Xtr[idx[l]];
+                            //Rcpp::Rcout << "l:" << l << "\n";
                             //std::cout<<"Grid Iteration: "<<i<<" Xrmax= "<<Xrmax<<std::endl;
                             break;
                         }
@@ -178,7 +181,8 @@ std::vector<std::unique_ptr<FitResult<T>>> Grid1D<T>::Fit() {
                 P.ModelParams[0] = Lambdas[i];
             }
             
-            // Rcpp::Rcout << "P.ModelParams[0]: " << P.ModelParams[0] << "\n";
+            //Rcpp::Rcout << "Xrmax: " << Xrmax << "\n";
+            //Rcpp::Rcout << "P.ModelParams[0]: " << P.ModelParams[0] << "\n";
            
             if (!currentskip) {
             
@@ -188,8 +192,9 @@ std::vector<std::unique_ptr<FitResult<T>>> Grid1D<T>::Fit() {
                 //std::this_thread::sleep_for(std::chrono::milliseconds(100));
                 
                 std::unique_ptr<FitResult<T>> result(new FitResult<T>);
+                LOG("Model Fit start");
                 *result = Model->Fit();
-    
+                LOG("Model Fit end");
                 //Rcpp::Rcout << "Grid1D: Model->Fit DONE"<< print_i++ << "\n";
                 //std::this_thread::sleep_for(std::chrono::milliseconds(100));
                 delete Model;
@@ -206,7 +211,7 @@ std::vector<std::unique_ptr<FitResult<T>>> Grid1D<T>::Fit() {
                     std::vector<std::size_t> Spnew = nnzIndicies(result->B);
                    
                     bool samesupp = false;
-                    Rcpp::Rcout << "|Spold|: " << Spold.size() << ", |Spnew|: " << Spnew.size() <<" \n";
+                    //Rcpp::Rcout << "|Spold|: " << Spold.size() << ", |Spnew|: " << Spnew.size() <<" \n";
                     
                     if (Spold == Spnew) {
                         samesupp = true;
@@ -233,9 +238,9 @@ std::vector<std::unique_ptr<FitResult<T>>> Grid1D<T>::Fit() {
                 //result->B.t().print();
                 P.InitialSol = G.back()->B;
                 P.b0 = G.back()->b0;
+                P.r = G.back()->r;
                 
                 // Udate: After 1.1.0, P.r is automatically updated by the previous call to CD
-                //*P.r = G.back()->r;
                 
                 //Rcpp::Rcout << "Grid1D:  G.back()->B;"<< print_i++ << "\n";
                 //std::this_thread::sleep_for(std::chrono::milliseconds(100));

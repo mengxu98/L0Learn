@@ -103,6 +103,32 @@ L0Learn.fit <- function(x, y, loss="SquaredError", penalty="L0", algorithm="CD",
 						lambdaGrid = list(), excludeFirstK=0, intercept = TRUE,
 						lows=-Inf, highs=Inf) {
     
+    # x and y must conform to the following shapes 
+    if (length(dim(x)) != 2){
+        stop("x must be a 2D numeric matrix")
+    } else {
+        x_n = dim(x)[1]
+        x_p = dim(x)[2]
+    }
+    if ((length(dim(y)) == 1) || ((length(dim(y)) == 2) && (dim(y)[2] == 1))) {
+        y_n = dim(y)[1]
+    } else {
+        stop("y must be a 1D numeric vector or a degenerate 2D numeric matrix")
+    }
+    
+    if (y_n != x_n){
+        stop ('x and y must have the same number of obversvations.')
+    }
+    
+    if (x_p <= excludeFirstK){
+        stop("excludeFirstK must be smaller than the number of columns of x")
+    }
+    
+    if (x_p <= maxSuppSize){
+        warning('maxSuppSize is larger than the number of columns of x.')
+    }
+        
+    
     if ((rtol < 0) || (rtol >= 1)){
         stop("The specified rtol parameter must exist in [0, 1)")
     }
@@ -281,7 +307,6 @@ L0Learn.fit <- function(x, y, loss="SquaredError", penalty="L0", algorithm="CD",
 	# Find potential support sizes exceeding maxSuppSize and remove them (this is due to
 	# the C++ core whose last solution can exceed maxSuppSize
 	for (i in 1:length(M$SuppSize)){
-	        print(M$beta[[i]]@Dim)
 			last = length(M$SuppSize[[i]])
 			if (M$SuppSize[[i]][last] > maxSuppSize){
 					if (last == 1){

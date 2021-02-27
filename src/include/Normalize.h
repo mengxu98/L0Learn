@@ -46,6 +46,7 @@ std::tuple<Eigen::ArrayXd, Eigen::ArrayXd, double, double>  Normalize(const T& X
         BetaMultiplier = 1 / scaleX.transpose().array(); // transpose scale to get a col vec
         scaley = 1;
     }
+
     return std::make_tuple(BetaMultiplier, meanX.transpose(), meany, scaley);
 }
 

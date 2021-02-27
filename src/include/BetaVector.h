@@ -15,9 +15,16 @@ std::vector<std::size_t> nnzIndicies(const Eigen::VectorXd& B, const std::size_t
 
 std::vector<std::size_t> nnzIndicies(const Eigen::SparseVector<double>& B, const std::size_t start=0);
 
-std::size_t n_nonzero(const Eigen::VectorXd& B);
+std::size_t inline n_nonzero(const Eigen::VectorXd& B){
+    const auto nnzs = B.array() != 0;
+    return nnzs.count();
+    
+}
 
-std::size_t n_nonzero(const Eigen::SparseVector<double>& B);
+std::size_t inline n_nonzero(const Eigen::SparseVector<double>& B){
+    return B.nonZeros();
+    
+}
 
 bool has_same_support(const Eigen::VectorXd& B1, const Eigen::VectorXd& B2);
 

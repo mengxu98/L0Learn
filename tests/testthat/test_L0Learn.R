@@ -21,6 +21,30 @@ test_that('L0Learn Accepts Proper Matricies', {
     succeed()
 })
 
+test_that('L0Learn exits on bad input shapes', {
+  f1 <- function(){
+    X_test <- matrix(rnorm(5*5), 5, 5)
+    y_test <-matrix(rnorm(10*1), 10, 1)
+    L0Learn.fit(X_test, y_test)
+  }
+  expect_failure(f1())
+  
+  f2 <- function(){
+    X_test <- matrix(rnorm(10*5), 10, 5)
+    y_test <-matrix(rnorm(10*2), 10, 2)
+    L0Learn.fit(X_test, y_test)
+  }
+  expect_failure(f2())
+  
+  f3 <- function(){
+    X_test <- matrix(rnorm(10*5), 10, 5)
+    y_test <-matrix(rnorm(10*1), 10, 1)
+    L0Learn.fit(X_test, y_test, excludeFirstK = 6)
+  }
+  expect_failure(f3())
+  
+})
+
 # test_that("L0Learn fails on CDPSI and SquaredHinge", {
 #    f1 <- function(){
 #      L0Learn.fit(X, sign(y), algorithm = "CDPSI", loss = "SquaredHinge")

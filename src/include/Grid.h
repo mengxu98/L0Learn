@@ -9,9 +9,8 @@
 #include "Grid1D.h"
 #include "Grid2D.h"
 #include "Normalize.h"
+#include "logging.h"
 
-#include <chrono>
-#include <thread>
 
 template <class T>
 class Grid {

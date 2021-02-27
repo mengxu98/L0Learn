@@ -7,9 +7,7 @@
 #include "Params.h"
 #include "Model.h"
 #include "utils.h"
-
-#include <chrono>
-#include <thread>
+#include "logging.h"
 
 constexpr double lambda1_fudge_factor = 1e-15;
 
@@ -193,25 +191,18 @@ void CD<T, Derived>::UpdateBiWithBounds(const std::size_t i){
                                 this->Lows[i], this->Highs[i]); 
     // Ideal Bi with regularization and bounds
     
-    // Rcpp::Rcout << "reg_Bi: " << reg_Bi << "\n";
-    // Rcpp::Rcout << "new_Bi: " << bnd_Bi << "\n";
-    // Rcpp::Rcout << "this->thr: " << this->thr << "\n";
-    
     if (i < this->NoSelectK){
         // L0 penalty is not applied for NoSelectK Variables.
         // Only L1 and L2 (if either are used)
         if (std::abs(nrb_Bi) > this->lambda1){
             static_cast<Derived*>(this)->ApplyNewBi(i, old_Bi, bnd_Bi);
-            // Rcpp::Rcout << "No Select k, Old: " << old_Bi << ", New: " << bnd_Bi << "\n";
         } else if (old_Bi != 0) {
             static_cast<Derived*>(this)->ApplyNewBi(i, old_Bi, 0);
-            // Rcpp::Rcout << "No Select k, Old: " << old_Bi << ", New: " << 0 << "\n";
         }
     } else if (reg_Bi < this->thr){
         // If ideal non-bounded reg_Bi is less than threshold, coefficient is not worth setting.
         if (old_Bi != 0){
             static_cast<Derived*>(this)->ApplyNewBi(i, old_Bi, 0);
-            // Rcpp::Rcout << "Below Thresh, Old: " << old_Bi << ", New: " << 0 << "\n";
         }
     } else { 
         // Thus reg_Bi >= this->thr 
@@ -228,11 +219,9 @@ void CD<T, Derived>::UpdateBiWithBounds(const std::size_t i){
             // bnd_Bi exists in [bnd_Bi - delta, bnd_Bi + delta]
             // Therefore accept bnd_Bi
             static_cast<Derived*>(this)->ApplyNewBi(i, old_Bi, bnd_Bi);
-            // Rcpp::Rcout << "Old: " << old_Bi << ", New: " << bnd_Bi << "\n";
         } else if (old_Bi != 0) {
             // Otherwise, reject bnd_Bi
             static_cast<Derived*>(this)->ApplyNewBi(i, old_Bi, 0);
-            // Rcpp::Rcout << "Old: " << old_Bi << ", New: " << 0 << "\n";
         }
     }
 }
@@ -247,49 +236,28 @@ void CD<T, Derived>::UpdateBi(const std::size_t i){
     //    ApplyNewBi
     //    ApplyNewBiCWMinCheck (found in UpdateBiCWMinCheck)
     
-    //Rcpp::Rcout << "UpdateBi\n";
-    //std::this_thread::sleep_for(std::chrono::milliseconds(100));
-    
-    //int ii = 0;
-    
-    //Rcpp::Rcout << "UpdateBi" << ii++ << "\n";
-    //std::this_thread::sleep_for(std::chrono::milliseconds(100));
     const double grd_Bi = static_cast<Derived*>(this)->GetBiGrad(i); // Gradient of Loss wrt to Bi
-    
-    //Rcpp::Rcout << "UpdateBi" << ii++ << "\n";
-    //std::this_thread::sleep_for(std::chrono::milliseconds(100));
+
+    //LOG("UpdateBi(" << i << ") Grad : " << grd_Bi << "\n");
+        
     this->Xtr[i] = std::abs(grd_Bi);  // Store absolute value of gradient for later steps
+
+    const double old_Bi = this->B[i]; // copy of old Bi to adjust residuals if Bi updates
     
-    //Rcpp::Rcout << "UpdateBi coeff \n";
-    //std::this_thread::sleep_for(std::chrono::milliseconds(100));
-    //Rcpp::Rcout << "UpdateBi this->B.size()"<< this->B.size() << " \n";
-    //std::this_thread::sleep_for(std::chrono::milliseconds(100));
-    //Rcpp::Rcout << "UpdateBi this->B(" << i << ")"<< this->B(i) << " \n";
-    //std::this_thread::sleep_for(std::chrono::milliseconds(100));
-    const double old_Bi = this->B(i); // copy of old Bi to adjust residuals if Bi updates
-    
-    //Rcpp::Rcout << "UpdateBi" << ii++ << "\n";
-    //std::this_thread::sleep_for(std::chrono::milliseconds(100));
     const double nrb_Bi = static_cast<Derived*>(this)->GetBiValue(old_Bi, grd_Bi); 
     // Update Step for New No regularization No Bounds Bi:
     //                     n  r                 b     _Bi => nrb_Bi
     // Example
     // For CDL0: the update step is nrb_Bi = old_Bi + grd_Bi
     
-    //Rcpp::Rcout << "UpdateBi" << ii++ << "\n";
-    //std::this_thread::sleep_for(std::chrono::milliseconds(100));
     const double reg_Bi = static_cast<Derived*>(this)->GetBiReg(nrb_Bi); 
     // Ideal Bi with L1 and L2 regularization (no bounds)
     // Does not account for L0 regularization 
     // Example
     // For CDL0: reg_Bi = nrb_Bi as there is no L1, L2 parameters
     
-    //Rcpp::Rcout << "UpdateBi" << ii++ << "\n";
-    //std::this_thread::sleep_for(std::chrono::milliseconds(100));
     const double new_Bi = std::copysign(reg_Bi, nrb_Bi); 
     
-    //Rcpp::Rcout << "UpdateBi" << ii++ << "\n";
-    //std::this_thread::sleep_for(std::chrono::milliseconds(100));
     if (i < this->NoSelectK){
         // L0 penalty is not applied for NoSelectK Variables.
         // Only L1 and L2 (if either are used)
@@ -302,11 +270,9 @@ void CD<T, Derived>::UpdateBi(const std::size_t i){
         // If ideal non-bounded reg_Bi is less than threshold, coefficient is not worth setting.
         if (old_Bi != 0){
             static_cast<Derived*>(this)->ApplyNewBi(i, old_Bi, 0);
-            // Rcpp::Rcout << "Z" << i <<" ";
         }
     } else { 
         static_cast<Derived*>(this)->ApplyNewBi(i, old_Bi, new_Bi);
-        // Rcpp::Rcout << "NZ" << i <<" ";
     }
 }
 
@@ -325,7 +291,6 @@ bool CD<T, Derived>::UpdateBiCWMinCheck(const std::size_t i, const bool Cwmin){
     if (reg_Bi < this->thr + lambda1_fudge_factor){
         return Cwmin;
     } else {
-        // Rcpp::Rcout << "Old B[" << i << "] = " << old_Bi << ", New B[" << i << "] = " << new_Bi << "\n";
         static_cast<Derived*>(this)->ApplyNewBiCWMinCheck(i, old_Bi, new_Bi);
         return false;
     }
@@ -372,47 +337,46 @@ CDBase<T>::CDBase(const T& Xi, const Eigen::ArrayXd& yi, const Params<T>& P) :
     ModelParams{P.ModelParams}, CyclingOrder{P.CyclingOrder}, MaxIters{P.MaxIters},
     rtol{P.rtol}, atol{P.atol}, ActiveSet{P.ActiveSet}, y{yi}, 
     ActiveSetNum{P.ActiveSetNum}, Lows{P.Lows}, Highs{P.Highs}
-    {
+{
         
-        this->lambda0 = P.ModelParams[0];
-        this->lambda1 = P.ModelParams[1];
-        this->lambda2 = P.ModelParams[2];
-        
-        this->result.ModelParams = P.ModelParams; 
-        this->NoSelectK = P.NoSelectK;
-        
-        this->Xtr = P.Xtr; 
-        this->Iter = P.Iter;
-        
-        this->isSparse = std::is_same<T,Eigen::SparseMatrix<double>>::value;
-        
-        this->b0 = P.b0;
-        this->intercept = P.intercept;
-        
-        this->withBounds = P.withBounds;
-        
-        this->X = &Xi;
-        
-        this->n = X->rows();
-        this->p = X->cols();
-        
-        if (P.Init == 'u') {
-            this->B = P.InitialSol;
-        } else {
-            //this->B = arma::zeros<beta_vector>(p);
-            this->B = beta_vector::Zero(p);
-        }
-        
-        if (CyclingOrder == 'u') {
-            this->Order = P.Uorder;
-        } else if (CyclingOrder == 'c') {
-            std::vector<std::size_t> cyclic(p);
-            std::iota(std::begin(cyclic), std::end(cyclic), 0);
-            this->Order = cyclic;
-        }
-        
-        this->CurrentIters = 0;
+    this->lambda0 = P.ModelParams[0];
+    this->lambda1 = P.ModelParams[1];
+    this->lambda2 = P.ModelParams[2];
+    
+    this->result.ModelParams = P.ModelParams; 
+    this->NoSelectK = P.NoSelectK;
+    
+    this->Xtr = P.Xtr; 
+    this->Iter = P.Iter;
+    
+    this->isSparse = std::is_same<T,Eigen::SparseMatrix<double>>::value;
+    
+    this->b0 = P.b0;
+    this->intercept = P.intercept;
+    
+    this->withBounds = P.withBounds;
+    
+    this->X = &Xi;
+    
+    this->n = X->rows();
+    this->p = X->cols();
+    
+    if (P.Init == 'u') {
+        this->B = P.InitialSol;
+    } else {
+        this->B = beta_vector::Zero(p);
     }
+    
+    if (CyclingOrder == 'u') {
+        this->Order = P.Uorder;
+    } else if (CyclingOrder == 'c') {
+        std::vector<std::size_t> cyclic(p);
+        std::iota(std::begin(cyclic), std::end(cyclic), 0);
+        this->Order = cyclic;
+    }
+    
+    this->CurrentIters = 0;
+}
 
 template<class T>
 FitResult<T> CDBase<T>::Fit(){
@@ -444,25 +408,27 @@ void CD<T, Derived>::UpdateSparse_b0(Eigen::ArrayXd& r){
 
 template<class T, class Derived>
 bool CD<T, Derived>::isConverged() {
+    LOG("isConverged Start");
     this->CurrentIters += 1; // keeps track of the number of calls to Converged
     const double objectiveold = this->objective;
     this->objective = this->Objective();
-    
-    // Rcpp::Rcout << "Old: "<< objectiveold << ", New: " << this->objective << "\n";
-    // Rcpp::Rcout << "Exit 1: " << (std::abs(objectiveold - this->objective) <= this->rtol*objectiveold) << ", Exit 2: " << (this->objective <= 1e-12) << "\n";
-    return std::abs(objectiveold - this->objective) <= this->rtol*objectiveold || this->objective <= this->atol; 
+    LOG("Objective() END");
+    return ((std::abs(objectiveold - this->objective) <= this->rtol*objectiveold) 
+                || (this->objective <= this->atol)); 
 }
 
 template<class T, class Derived>
 void CD<T, Derived>::RestrictSupport() {
-    
+    LOG("RestrictSupport Start");
     if (has_same_support(this->B, this->Bprev)) {
         this->SameSuppCounter += 1;
         
         if (this->SameSuppCounter == this->ActiveSetNum - 1) {
             std::vector<std::size_t> NewOrder = nnzIndicies(this->B);
             
-            std::sort(NewOrder.begin(), NewOrder.end(), [this](std::size_t i, std::size_t j) {return this->Order[i] <  this->Order[j] ;});
+            std::sort(NewOrder.begin(),
+                      NewOrder.end(), 
+                      [this](std::size_t i, std::size_t j) {return this->Order[i] < this->Order[j] ;});
             
             this->OldOrder = this->Order;
             this->Order = NewOrder;
@@ -474,11 +440,13 @@ void CD<T, Derived>::RestrictSupport() {
     } else {
         this->SameSuppCounter = 0;
     }
+    LOG("RestrictSupport END");
     
 }
 
 template<class T, class Derived>
 bool CD<T, Derived>::CWMinCheckWithBounds() {
+    LOG("CWMinCheckWithBounds Start");
     std::vector<std::size_t> S = nnzIndicies(this->B);
     
     std::vector<std::size_t> Sc;
@@ -493,11 +461,13 @@ bool CD<T, Derived>::CWMinCheckWithBounds() {
     for (auto& i : Sc) {
         Cwmin = this->UpdateBiCWMinCheckWithBounds(i, Cwmin);
     }
+    LOG("CWMinCheckWithBounds End");
     return Cwmin;
 }
 
 template<class T, class Derived>
 bool CD<T, Derived>::CWMinCheck() {
+    LOG("CWMinCheck Start");
     std::vector<std::size_t> S = nnzIndicies(this->B);
     
     std::vector<std::size_t> Sc;
@@ -510,12 +480,9 @@ bool CD<T, Derived>::CWMinCheck() {
     
     bool Cwmin = true;
     for (auto& i : Sc) {
-        // Rcpp::Rcout << "CW Iteration: " << i << "\n";
-        // std::this_thread::sleep_for(std::chrono::milliseconds(100));
         Cwmin = this->UpdateBiCWMinCheck(i, Cwmin);
     }
-    
-    // Rcpp::Rcout << "CWMinCheckL " << Cwmin << "\n";
+    LOG("CWMinCheck END");
     
     return Cwmin;
 }
