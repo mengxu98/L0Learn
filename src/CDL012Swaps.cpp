@@ -1,4 +1,4 @@
-#include "CDL012Swaps.h"
+#include "CDL012Swaps.hpp"
 
 template <class T>
 CDL012Swaps<T>::CDL012Swaps(const T& Xi, const arma::vec& yi, const Params<T>& Pi) : CDSwaps<T>(Xi, yi, Pi) {}

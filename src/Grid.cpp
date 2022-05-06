@@ -1,4 +1,4 @@
-#include "Grid.h"
+#include "Grid.hpp"
 
 // Assumes PG.P.Specs have been already set
 template <class T>
@@ -44,12 +44,8 @@ void Grid<T>::Fit() {
             Lambda0[i].push_back(g->ModelParams[0]);
             
             NnzCount[i].push_back(n_nonzero(g->B));
-            
-            if (g->IterNum != PG.P.MaxIters){
-                Converged[i].push_back(true);
-            } else {
-                Converged[i].push_back(false);
-            }
+
+            Converged[i].push_back(g->IterNum != PG.P.MaxIters);
             
             beta_vector B_unscaled;
             double b0;

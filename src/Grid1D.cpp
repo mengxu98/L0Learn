@@ -1,4 +1,4 @@
-#include "Grid1D.h"
+#include "Grid1D.hpp"
 
 template <class T>
 Grid1D<T>::Grid1D(const T& Xi, const arma::vec& yi, const GridParams<T>& PG) {
@@ -121,7 +121,7 @@ std::vector<std::unique_ptr<FitResult<T>>> Grid1D<T>::Fit() {
         bool currentskip = false; // current grid point should be skipped
         
         for (std::size_t i = 0; i < G_ncols; ++i) {
-            Rcpp::checkUserInterrupt();
+            // Rcpp::checkUserInterrupt();
             // Rcpp::Rcout << "Grid1D: " << i << "\n";
             FitResult<T> *  prevresult = new FitResult<T>; // prevresult is ptr to the prev result object
             //std::unique_ptr<FitResult> prevresult;
