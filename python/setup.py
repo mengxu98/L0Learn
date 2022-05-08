@@ -1,100 +1,140 @@
-#!/usr/bin/python3
+#!/usr/bin/env python
+# -*- encoding: utf-8 -*-
+from __future__ import absolute_import
+from __future__ import print_function
 
 import os
+import subprocess
+import sys
 
-from setuptools import setup, Extension, find_packages
-import numpy as np
+from setuptools import Extension, setup, find_packages
+from setuptools.command.build_ext import build_ext
+
+if sys.version_info < (3, 7):
+    sys.exit("Sorry, Only Python 3.6 - 3.9 is supported")
+
+import io
+import re
+from os.path import dirname
+from os.path import join
 
 
-try:
-    from Cython.Build import cythonize
-except ImportError:
-    cythonize = None
+def read(*names, **kwargs):
+    with io.open(
+            join(dirname(__file__), *names), encoding=kwargs.get("encoding", "utf8")
+    ) as fh:
+        return fh.read()
 
-try:
-    from psutil import cpu_count
 
-    psutil_found = True
-except ImportError:
-    psutil_found = False
+# Convert distutils Windows platform specifiers to CMake -A arguments
+PLAT_TO_CMAKE = {
+    "win32": "Win32",
+    "win-amd64": "x64",
+    "win-arm32": "ARM",
+    "win-arm64": "ARM64",
+}
 
-from Cython.Distutils import build_ext
 
-CYTHONIZE = bool(int(os.getenv("CYTHONIZE", 0))) and cythonize is not None
-CYTHONIZE = True
-COVERAGE_MODE = bool(os.getenv("L0LEARN_COVERAGE_MODE", 0)) and CYTHONIZE
+# A CMakeExtension needs a sourcedir instead of a file list.
+# The name must be the _single_ output extension from the CMake build.
+# If you need multiple extensions, see scikit-build.
+class CMakeExtension(Extension):
+    def __init__(self, name, sourcedir=""):
+        Extension.__init__(self, name, sources=[])
+        self.sourcedir = os.path.abspath(sourcedir)
 
-# https://cython.readthedocs.io/en/latest/src/userguide/source_files_and_compilation.html#distributing-cython-modules
-def no_cythonize(extensions, **_ignore):
-    for extension in extensions:
-        sources = []
-        for sfile in extension.sources:
-            path, ext = os.path.splitext(sfile)
-            if ext in (".pyx", ".py"):
-                if extension.language == "c++":
-                    ext = ".cpp"
-                else:
-                    ext = ".c"
-                sfile = path + ext
-            sources.append(sfile)
-        extension.sources[:] = sources
-    return extensions
 
-if psutil_found:
-    os.environ["CMAKE_BUILD_PARALLEL_LEVEL"] = str(cpu_count(logical=False))
+class CMakeBuild(build_ext):
+    def build_extension(self, ext):
+        extdir = os.path.abspath(os.path.dirname(self.get_ext_fullpath(ext.name)))
 
-if COVERAGE_MODE:
-    macros = [("CYTHON_TRACE_NOGIL", "1")]
-else:
-    macros = []
+        # required for auto-detection & inclusion of auxiliary "native" libs
+        if not extdir.endswith(os.path.sep):
+            extdir += os.path.sep
 
-extensions = [
-    Extension(name='l0learn.cyarma',
-              sources=["src/l0learn/cyarma.pyx"],
-              include_dirs=['.', np.get_include()],
-              language="c++",
-              libraries=["armadillo", "lapack", "blas"],
-              extra_compile_args=["-std=c++11"],
-              extra_link_args=["-std=c++11"],
-              define_macros=macros,
-              ),
-    Extension(name='l0learn.testing_utils',
-              sources=["src/l0learn/testing_utils.pyx"],
-              include_dirs=['.', np.get_include()],
-              language="c++",
-              libraries=["armadillo", "lapack", "blas"],
-              extra_compile_args=["-std=c++11"],
-              extra_link_args=["-std=c++11"],
-              define_macros=macros,
-              ),
-    Extension(name="l0learn.interface",
-              sources=["src/l0learn/interface.pyx",
-                       "src/l0learn/src/CDL012LogisticSwaps.cpp",
-                       "src/l0learn/src/Grid2D.cpp",
-                       "src/l0learn/src/CDL012SquaredHingeSwaps.cpp",
-                       "src/l0learn/src/Normalize.cpp",
-                       "src/l0learn/src/CDL012Swaps.cpp",
-                       "src/l0learn/src/Grid.cpp",
-                       "src/l0learn/src/Grid1D.cpp"
-                       ],
-              include_dirs=['.', np.get_include(), "src/l0learn/src/include"],
-              language="c++",
-              libraries=["armadillo", "lapack", "blas"],
-              extra_compile_args=["-std=c++11"],
-              extra_link_args=["-std=c++11"],
-              define_macros=macros,
-              ),
-]
+        debug = int(os.environ.get("DEBUG", 0)) if self.debug is None else self.debug
+        cfg = "Debug" if debug else "Release"
 
-if CYTHONIZE:
-    compiler_directives = {"language_level": 3, "embedsignature": True}
-    if COVERAGE_MODE:
-        compiler_directives['linetrace'] = True
-    extensions = cythonize(extensions, compiler_directives=compiler_directives)
-else:
-    COVERAGE_MODE = False
-    extensions = no_cythonize(extensions)
+        # CMake lets you override the generator - we need to check this.
+        # Can be set with Conda-Build, for example.
+        cmake_generator = os.environ.get("CMAKE_GENERATOR", "")
 
+        # Set Python_EXECUTABLE instead if you use PYBIND11_FINDPYTHON
+        # EXAMPLE_VERSION_INFO shows you how to pass a value into the C++ code
+        # from Python.
+        cmake_args = [
+            f"-DCMAKE_LIBRARY_OUTPUT_DIRECTORY={extdir}",
+            f"-DPYTHON_EXECUTABLE={sys.executable}",
+            f"-DCMAKE_BUILD_TYPE={cfg}",  # not used on MSVC, but no harm
+        ]
+        build_args = []
+        # Adding CMake arguments set as environment variable
+        # (needed e.g. to build for ARM OSx on conda-forge)
+        if "CMAKE_ARGS" in os.environ:
+            cmake_args += [item for item in os.environ["CMAKE_ARGS"].split(" ") if item]
+
+        # In this example, we pass in the version to C++. You might not need to.
+        cmake_args += [f"-DEXAMPLE_VERSION_INFO={self.distribution.get_version()}"]
+
+        if self.compiler.compiler_type != "msvc":
+            # Using Ninja-build since it a) is available as a wheel and b)
+            # multithreads automatically. MSVC would require all variables be
+            # exported for Ninja to pick it up, which is a little tricky to do.
+            # Users can override the generator with CMAKE_GENERATOR in CMake
+            # 3.15+.
+            if not cmake_generator:
+                try:
+                    import ninja  # noqa: F401
+
+                    cmake_args += ["-GNinja"]
+                except ImportError:
+                    pass
+
+        else:
+
+            # Single config generators are handled "normally"
+            single_config = any(x in cmake_generator for x in {"NMake", "Ninja"})
+
+            # CMake allows an arch-in-generator style for backward compatibility
+            contains_arch = any(x in cmake_generator for x in {"ARM", "Win64"})
+
+            # Specify the arch if using MSVC generator, but only if it doesn't
+            # contain a backward-compatibility arch spec already in the
+            # generator name.
+            if not single_config and not contains_arch:
+                cmake_args += ["-A", PLAT_TO_CMAKE[self.plat_name]]
+
+            # Multi-config generators have a different way to specify configs
+            if not single_config:
+                cmake_args += [
+                    f"-DCMAKE_LIBRARY_OUTPUT_DIRECTORY_{cfg.upper()}={extdir}"
+                ]
+                build_args += ["--config", cfg]
+
+        if sys.platform.startswith("darwin"):
+            # Cross-compile support for macOS - respect ARCHFLAGS if set
+            archs = re.findall(r"-arch (\S+)", os.environ.get("ARCHFLAGS", ""))
+            if archs:
+                cmake_args += ["-DCMAKE_OSX_ARCHITECTURES={}".format(";".join(archs))]
+
+        # Set CMAKE_BUILD_PARALLEL_LEVEL to control the parallel build level
+        # across all generators.
+        if "CMAKE_BUILD_PARALLEL_LEVEL" not in os.environ:
+            # self.parallel is a Python 3 only way to set parallel jobs by hand
+            # using -j in the build_ext call, not supported by pip or PyPA-build.
+            if hasattr(self, "parallel") and self.parallel:
+                # CMake 3.12+ only.
+                build_args += [f"-j{self.parallel}"]
+
+        if not os.path.exists(self.build_temp):
+            os.makedirs(self.build_temp)
+
+        subprocess.check_call(
+            ["cmake", ext.sourcedir] + cmake_args, cwd=self.build_temp
+        )
+        subprocess.check_call(
+            ["cmake", "--build", "."] + build_args, cwd=self.build_temp
+        )
 """
 Installation Notes;
 How to ensure proper underlying armadillo is installed?
@@ -106,10 +146,17 @@ with open("README.md", "r", encoding="utf-8") as fh:
 
 setup(
     name='l0learn',
+    version="0.0.2",
     maintainer='Tim Nonet',
     author_email="tim.nonet@gmail.com",
     description="L0Learn is a highly efficient framework for solving L0-regularized learning problems.",
-    long_description=long_description,
+    long_description="%s\n%s"
+                     % (
+                         re.compile("^.. start-badges.*^.. end-badges", re.M | re.S).sub(
+                             "", read("README.md")
+                         ),
+                         re.sub(":[a-z]+:`~?(.*?)`", r"``\1``", read("CHANGELOG.md")),
+                     ),
     long_description_content_type="text/markdown",
     url="https://github.com/hazimehh/L0Learn",
     project_urls={
@@ -119,11 +166,11 @@ setup(
         "Programming Language :: Python :: 3",
         "Operating System :: OS Independent",
     ],
-    cmdclass={'build_ext': build_ext},
     packages=find_packages("src"),
     package_dir={"": "src"},
     include_package_data=True,
-    ext_modules=extensions,
+    ext_modules=[CMakeExtension("l0learn_core")],
+    cmdclass={"build_ext": CMakeBuild},
     install_requires=[
         "numpy>=1.19.0",
         "scipy>=1.1.0",

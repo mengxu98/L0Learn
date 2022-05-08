@@ -1,0 +1,9 @@
+[submodule "python/external/--force"]
+	path = python/external/--force
+	url = git@github.com:RUrlus/carma.git
+[submodule "python/external/carma"]
+	path = python/external/carma
+	url = git@github.com:RUrlus/carma.git
+[submodule "python/external/pybind11"]
+	path = python/external/pybind11
+	url = git@github.com:pybind/pybind11.git
