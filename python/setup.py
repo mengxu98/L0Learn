@@ -21,7 +21,7 @@ from os.path import join
 
 def read(*names, **kwargs):
     with io.open(
-            join(dirname(__file__), *names), encoding=kwargs.get("encoding", "utf8")
+        join(dirname(__file__), *names), encoding=kwargs.get("encoding", "utf8")
     ) as fh:
         return fh.read()
 
@@ -135,6 +135,8 @@ class CMakeBuild(build_ext):
         subprocess.check_call(
             ["cmake", "--build", "."] + build_args, cwd=self.build_temp
         )
+
+
 """
 Installation Notes;
 How to ensure proper underlying armadillo is installed?
@@ -145,18 +147,18 @@ with open("README.md", "r", encoding="utf-8") as fh:
     long_description = fh.read()
 
 setup(
-    name='l0learn',
+    name="l0learn",
     version="0.0.2",
-    maintainer='Tim Nonet',
+    maintainer="Tim Nonet",
     author_email="tim.nonet@gmail.com",
     description="L0Learn is a highly efficient framework for solving L0-regularized learning problems.",
     long_description="%s\n%s"
-                     % (
-                         re.compile("^.. start-badges.*^.. end-badges", re.M | re.S).sub(
-                             "", read("README.md")
-                         ),
-                         re.sub(":[a-z]+:`~?(.*?)`", r"``\1``", read("CHANGELOG.md")),
-                     ),
+    % (
+        re.compile("^.. start-badges.*^.. end-badges", re.M | re.S).sub(
+            "", read("README.md")
+        ),
+        re.sub(":[a-z]+:`~?(.*?)`", r"``\1``", read("CHANGELOG.md")),
+    ),
     long_description_content_type="text/markdown",
     url="https://github.com/hazimehh/L0Learn",
     project_urls={
@@ -175,15 +177,15 @@ setup(
         "numpy>=1.19.0",
         "scipy>=1.1.0",
         "pandas>=1.0.0",
-        "matplotlib>=3.0.0"
+        "matplotlib>=3.0.0",
     ],
-    extras_require={"test": [
-        "attrs>=19.2.0",  # Usually installed by hypothesis, but current issue
-        # #https://github.com/HypothesisWorks/hypothesis/issues/2113
-        "hypothesis",
-        "pytest",
-    ]},
+    extras_require={
+        "test": [
+            "attrs>=19.2.0",  # Usually installed by hypothesis, but current issue
+            # #https://github.com/HypothesisWorks/hypothesis/issues/2113
+            "hypothesis",
+            "pytest",
+        ]
+    },
     python_requires=">=3.7",
 )
-
-

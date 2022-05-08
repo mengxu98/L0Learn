@@ -2,7 +2,13 @@ from typing import Union, List, Sequence, Dict, Any, Optional
 
 import l0learn
 from l0learn.models import FitModel, CVFitModel
-from l0learn.l0learn_core import _L0LearnFit_sparse, _L0LearnFit_dense, _L0LearnCV_dense, _L0LearnCV_sparse, _sparse_mat
+from l0learn.l0learn_core import (
+    _L0LearnFit_sparse,
+    _L0LearnFit_dense,
+    _L0LearnCV_dense,
+    _L0LearnCV_sparse,
+    _sparse_mat,
+)
 from scipy.sparse import csc_matrix
 import numpy as np
 from warnings import warn
@@ -17,37 +23,43 @@ def as_sparse_mat(x: csc_matrix) -> _sparse_mat:
     return _sparse_mat(x.indices, x.indptr, x.data, *x.shape)
 
 
-def _fit_check(X: Union[np.ndarray, csc_matrix],
-               y: np.ndarray,
-               loss: str,
-               penalty: str,
-               algorithm: str,
-               max_support_size: int,
-               num_lambda: Union[int, None],
-               num_gamma: Union[int, None],
-               gamma_max: float,
-               gamma_min: float,
-               partial_sort: bool,
-               max_iter: int,
-               rtol: float,
-               atol: float,
-               active_set: bool,
-               active_set_num: int,
-               max_swaps: int,
-               scale_down_factor: float,
-               screen_size: int,
-               lambda_grid: Union[List[Sequence[float]], None],
-               exclude_first_k: int,
-               intercept: bool,
-               lows: Union[np.ndarray, float],
-               highs: Union[np.ndarray, float]) -> Dict[str, Any]:
+def _fit_check(
+    X: Union[np.ndarray, csc_matrix],
+    y: np.ndarray,
+    loss: str,
+    penalty: str,
+    algorithm: str,
+    max_support_size: int,
+    num_lambda: Union[int, None],
+    num_gamma: Union[int, None],
+    gamma_max: float,
+    gamma_min: float,
+    partial_sort: bool,
+    max_iter: int,
+    rtol: float,
+    atol: float,
+    active_set: bool,
+    active_set_num: int,
+    max_swaps: int,
+    scale_down_factor: float,
+    screen_size: int,
+    lambda_grid: Union[List[Sequence[float]], None],
+    exclude_first_k: int,
+    intercept: bool,
+    lows: Union[np.ndarray, float],
+    highs: Union[np.ndarray, float],
+) -> Dict[str, Any]:
     if isinstance(X, (np.ndarray, csc_matrix)):
         if X.dtype != np.float64:
-            raise ValueError(f"expected X to have dtype {np.float64}, but got {X.dtype}")
+            raise ValueError(
+                f"expected X to have dtype {np.float64}, but got {X.dtype}"
+            )
         if X.ndim != 2:
             raise ValueError(f"expected X to be 2D, but got {X.ndim}D")
         if not np.product(X.shape):
-            raise ValueError(f"expected X to have non-degenerate axis, but got {X.shape}")
+            raise ValueError(
+                f"expected X to have non-degenerate axis, but got {X.shape}"
+            )
         # if isinstance(X, np.ndarray):
         #     if not X.flags.contiguous:
         #         raise ValueError(f"expected X to be contiguous, but is not.")
@@ -55,58 +67,98 @@ def _fit_check(X: Union[np.ndarray, csc_matrix],
         #     if not (X.indptr.flags.contiguous and X.indices.flags.contiguous and X.data.flags.continuous):
         #         raise ValueError(f"expected X to have contiguous `indptr`, `indices`, and `data`, but is not.")
     else:
-        raise ValueError(f"expected X to be a {np.ndarray} or a {csc_matrix}, but got {type(X)}.")
+        raise ValueError(
+            f"expected X to be a {np.ndarray} or a {csc_matrix}, but got {type(X)}."
+        )
 
     n, p = X.shape
-    if not isinstance(y, np.ndarray) or not np.isrealobj(y) or y.ndim != 1 or len(y) != n:
+    if (
+        not isinstance(y, np.ndarray)
+        or not np.isrealobj(y)
+        or y.ndim != 1
+        or len(y) != n
+    ):
         raise ValueError(f"expected y to be a 1D real numpy, but got {y}.")
     if loss not in SUPPORTED_LOSS:
-        raise ValueError(f"expected loss parameter to be on of {SUPPORTED_LOSS}, but got {loss}")
+        raise ValueError(
+            f"expected loss parameter to be on of {SUPPORTED_LOSS}, but got {loss}"
+        )
     if penalty not in SUPPORTED_PENALTY:
-        raise ValueError(f"expected penalty parameter to be on of {SUPPORTED_PENALTY}, but got {penalty}")
+        raise ValueError(
+            f"expected penalty parameter to be on of {SUPPORTED_PENALTY}, but got {penalty}"
+        )
     if algorithm not in SUPPORTED_ALGORITHM:
-        raise ValueError(f"expected algorithm parameter to be on of {SUPPORTED_ALGORITHM}, but got {algorithm}")
+        raise ValueError(
+            f"expected algorithm parameter to be on of {SUPPORTED_ALGORITHM}, but got {algorithm}"
+        )
     if not isinstance(max_support_size, int) or 1 > max_support_size:
-        raise ValueError(f"expected max_support_size parameter to be a positive integer, but got {max_support_size}")
+        raise ValueError(
+            f"expected max_support_size parameter to be a positive integer, but got {max_support_size}"
+        )
     max_support_size = min(p, max_support_size)
 
     if gamma_max < 0:
-        raise ValueError(f"expected gamma_max parameter to be a positive float, but got {gamma_max}")
+        raise ValueError(
+            f"expected gamma_max parameter to be a positive float, but got {gamma_max}"
+        )
     if gamma_min < 0 or gamma_min > gamma_max:
-        raise ValueError(f"expected gamma_max parameter to be a positive float less than gamma_max,"
-                         f" but got {gamma_min}")
+        raise ValueError(
+            f"expected gamma_max parameter to be a positive float less than gamma_max,"
+            f" but got {gamma_min}"
+        )
     if not isinstance(partial_sort, bool):
-        raise ValueError(f"expected partial_sort parameter to be a bool, but got {partial_sort}")
+        raise ValueError(
+            f"expected partial_sort parameter to be a bool, but got {partial_sort}"
+        )
     if not isinstance(max_iter, int) or max_iter < 1:
-        raise ValueError(f"expected max_iter parameter to be a positive integer, but got {max_iter}")
+        raise ValueError(
+            f"expected max_iter parameter to be a positive integer, but got {max_iter}"
+        )
     if rtol < 0 or rtol >= 1:
         raise ValueError(f"expected rtol parameter to exist in [0, 1), but got {rtol}")
     if atol < 0:
-        raise ValueError(f"expected atol parameter to exist in [0, INF), but got {atol}")
+        raise ValueError(
+            f"expected atol parameter to exist in [0, INF), but got {atol}"
+        )
     if not isinstance(active_set, bool):
-        raise ValueError(f"expected active_set parameter to be a bool, but got {active_set}")
+        raise ValueError(
+            f"expected active_set parameter to be a bool, but got {active_set}"
+        )
     if not isinstance(active_set_num, int) or active_set_num < 1:
-        raise ValueError(f"expected active_set_num parameter to be a positive integer, but got {active_set_num}")
+        raise ValueError(
+            f"expected active_set_num parameter to be a positive integer, but got {active_set_num}"
+        )
     if not isinstance(max_swaps, int) or max_swaps < 1:
-        raise ValueError(f"expected max_swaps parameter to be a positive integer, but got {max_swaps}")
+        raise ValueError(
+            f"expected max_swaps parameter to be a positive integer, but got {max_swaps}"
+        )
     if not (0 < scale_down_factor < 1):
-        raise ValueError(f"expected scale_down_factor parameter to exist in (0, 1), but got {scale_down_factor}")
+        raise ValueError(
+            f"expected scale_down_factor parameter to exist in (0, 1), but got {scale_down_factor}"
+        )
     if not isinstance(screen_size, int) or screen_size < 1:
-        raise ValueError(f"expected screen_size parameter to be a positive integer, but got {screen_size}")
+        raise ValueError(
+            f"expected screen_size parameter to be a positive integer, but got {screen_size}"
+        )
     screen_size = min(screen_size, p)
 
     if not isinstance(exclude_first_k, int) or not (0 <= exclude_first_k <= p):
-        raise ValueError(f"expected exclude_first_k parameter to be a positive integer less than {p}, "
-                         f"but got {exclude_first_k}")
+        raise ValueError(
+            f"expected exclude_first_k parameter to be a positive integer less than {p}, "
+            f"but got {exclude_first_k}"
+        )
     if not isinstance(intercept, bool):
-        raise ValueError(f"expected intercept parameter to be a bool, "
-                         f"but got {intercept}")
+        raise ValueError(
+            f"expected intercept parameter to be a bool, " f"but got {intercept}"
+        )
 
     if loss in CLASSIFICATION_LOSS:
         unique_items = sorted(np.unique(y))
         if len(unique_items) != 2:
-            raise ValueError(f"expected y vector to only have two unique values (Binary Classification), "
-                             f"but got {unique_items}")
+            raise ValueError(
+                f"expected y vector to only have two unique values (Binary Classification), "
+                f"but got {unique_items}"
+            )
         else:
             a, *_ = unique_items  # a is the lower value
             y = np.copy(y)
@@ -126,76 +178,113 @@ def _fit_check(X: Union[np.ndarray, csc_matrix],
                 # we are converting L0 to L0L2 with small L2 penalty.
                 # Here we must check if lambdaGrid is supplied (And thus use 'autolambda')
                 # If 'lambdaGrid' is supplied, we must only supply 1 list of lambda values
-                raise ValueError(f"L0 Penalty requires 'lambda_grid' to be a list of length 1, but got {lambda_grid}.")
+                raise ValueError(
+                    f"L0 Penalty requires 'lambda_grid' to be a list of length 1, but got {lambda_grid}."
+                )
 
         penalty = "L0L2"
         gamma_max = 1e-7
         gamma_min = 1e-7
     elif penalty != "L0" and num_gamma == 1:
-        warn(f"num_gamma set to 1 with {penalty} penalty. Only one {penalty[2:]} penalty value will be fit.")
+        warn(
+            f"num_gamma set to 1 with {penalty} penalty. Only one {penalty[2:]} penalty value will be fit."
+        )
 
     if y.dtype != np.float64:
-        raise ValueError(f"expected y vector to have type {np.float64}, but got {y.dtype}")
+        raise ValueError(
+            f"expected y vector to have type {np.float64}, but got {y.dtype}"
+        )
 
     if lambda_grid is None:
-        lambda_grid = [[0.]]
+        lambda_grid = [[0.0]]
         auto_lambda = True
         if not isinstance(num_lambda, int) or num_lambda < 1:
             raise ValueError(
-                f"expected num_lambda to a positive integer when lambda_grid is None, but got {num_lambda}.")
+                f"expected num_lambda to a positive integer when lambda_grid is None, but got {num_lambda}."
+            )
         if not isinstance(num_gamma, int) or num_gamma < 1:
-            raise ValueError(f"expected num_gamma to a positive integer when lambda_grid is None, but got {num_gamma}.")
+            raise ValueError(
+                f"expected num_gamma to a positive integer when lambda_grid is None, but got {num_gamma}."
+            )
         if penalty == "L0" and num_gamma != 1:
-            raise ValueError(f"expected num_gamma to 1 when penalty = 'L0', but got {num_gamma}.")
+            raise ValueError(
+                f"expected num_gamma to 1 when penalty = 'L0', but got {num_gamma}."
+            )
     else:  # lambda_grid should be a List[List[float]]
         if num_gamma is not None:
-            raise ValueError(f"expected num_gamma to be None if lambda_grid is specified by the user, "
-                             f"but got {num_gamma}")
+            raise ValueError(
+                f"expected num_gamma to be None if lambda_grid is specified by the user, "
+                f"but got {num_gamma}"
+            )
         num_gamma = len(lambda_grid)
 
         if num_lambda is not None:
-            raise ValueError(f"expected num_lambda to be None if lambda_grid is specified by the user, "
-                             f"but got {num_lambda}")
+            raise ValueError(
+                f"expected num_lambda to be None if lambda_grid is specified by the user, "
+                f"but got {num_lambda}"
+            )
         num_lambda = 0  # This value is ignored.
         auto_lambda = False
-        bad_lambda_grid = False
 
         if penalty == "L0" and num_gamma != 1:
-            raise ValueError(f"expected lambda_grid to of length 1 when penalty = 'L0', but got {len(lambda_grid)}")
+            raise ValueError(
+                f"expected lambda_grid to of length 1 when penalty = 'L0', but got {len(lambda_grid)}"
+            )
 
         for i, sub_lambda_grid in enumerate(lambda_grid):
             if sub_lambda_grid[0] <= 0:
-                raise ValueError(f"Expected all values of lambda_grid to be positive, "
-                                 f"but got lambda_grid[{i}] containing a negative value")
+                raise ValueError(
+                    f"Expected all values of lambda_grid to be positive, "
+                    f"but got lambda_grid[{i}] containing a negative value"
+                )
             if any(np.diff(sub_lambda_grid) >= 0):
-                raise ValueError(f"Expected each element of lambda_grid to be a list of decreasing value, "
-                                 f"but got lambda_grid[{i}] containing an increasing value.")
+                raise ValueError(
+                    f"Expected each element of lambda_grid to be a list of decreasing value, "
+                    f"but got lambda_grid[{i}] containing an increasing value."
+                )
 
     n, p = X.shape
     with_bounds = False
 
     if isinstance(lows, float):
         if lows > 0:
-            raise ValueError(f"expected lows to be a non-positive float, but got {lows}")
-        elif lows > -float('inf'):
+            raise ValueError(
+                f"expected lows to be a non-positive float, but got {lows}"
+            )
+        elif lows > -float("inf"):
             with_bounds = True
-    elif isinstance(lows, np.ndarray) and lows.ndim == 1 and len(lows) == p and all(lows <= 0):
+    elif (
+        isinstance(lows, np.ndarray)
+        and lows.ndim == 1
+        and len(lows) == p
+        and all(lows <= 0)
+    ):
         with_bounds = True
     else:
         raise ValueError(
             f"expected lows to be a non-positive float, or a 1D numpy array of length {p} of non-positives "
-            f"floats, but got {lows}")
+            f"floats, but got {lows}"
+        )
 
     if isinstance(highs, float):
         if highs < 0:
-            raise ValueError(f"expected highs to be a non-negative float, but got {highs}")
-        if highs < float('inf'):
+            raise ValueError(
+                f"expected highs to be a non-negative float, but got {highs}"
+            )
+        if highs < float("inf"):
             with_bounds = True
-    elif isinstance(highs, np.ndarray) and highs.ndim == 1 and len(highs) == p and all(highs >= 0):
+    elif (
+        isinstance(highs, np.ndarray)
+        and highs.ndim == 1
+        and len(highs) == p
+        and all(highs >= 0)
+    ):
         with_bounds = True
     else:
-        raise ValueError(f"expected highs to be a non-negative float, or a 1D numpy array of length {p} of "
-                         f"non-negative floats, but got {highs}")
+        raise ValueError(
+            f"expected highs to be a non-negative float, or a 1D numpy array of length {p} of "
+            f"non-negative floats, but got {highs}"
+        )
 
     if with_bounds:
         if isinstance(lows, float):
@@ -205,51 +294,57 @@ def _fit_check(X: Union[np.ndarray, csc_matrix],
 
         if any(lows >= highs):
             bad_bounds = np.argwhere(lows >= highs)
-            raise ValueError(f"expected to be high to be elementwise greater than lows, "
-                             f"but got indices {bad_bounds[0]} where that is not the case ")
+            raise ValueError(
+                f"expected to be high to be elementwise greater than lows, "
+                f"but got indices {bad_bounds[0]} where that is not the case "
+            )
     else:
-        lows = np.array([0.])
-        highs = np.array(([0.]))
+        lows = np.array([0.0])
+        highs = np.array(([0.0]))
 
-    return {"max_support_size": max_support_size,
-            "screen_size": screen_size,
-            "y": y,
-            "penalty": penalty,
-            "gamma_max": float(gamma_max),
-            "gamma_min": float(gamma_min),
-            "lambda_grid": [[float(i) for i in lst] for lst in lambda_grid],
-            "num_gamma": num_gamma,
-            "num_lambda": num_lambda,
-            "auto_lambda": auto_lambda,
-            "with_bounds": with_bounds,
-            "lows": lows.astype('float'),
-            "highs": highs.astype('float')}
+    return {
+        "max_support_size": max_support_size,
+        "screen_size": screen_size,
+        "y": y,
+        "penalty": penalty,
+        "gamma_max": float(gamma_max),
+        "gamma_min": float(gamma_min),
+        "lambda_grid": [[float(i) for i in lst] for lst in lambda_grid],
+        "num_gamma": num_gamma,
+        "num_lambda": num_lambda,
+        "auto_lambda": auto_lambda,
+        "with_bounds": with_bounds,
+        "lows": lows.astype("float"),
+        "highs": highs.astype("float"),
+    }
 
 
-def fit(X: Union[np.ndarray, csc_matrix],
-        y: np.ndarray,
-        loss: str = "SquaredError",
-        penalty: str = "L0",
-        algorithm: str = "CD",
-        max_support_size: int = 100,
-        num_lambda: Optional[int] = 100,
-        num_gamma: Optional[int] = 1,
-        gamma_max: float = 10.,
-        gamma_min: float = .0001,
-        partial_sort: bool = True,
-        max_iter: int = 200,
-        rtol: float = 1e-6,
-        atol: float = 1e-9,
-        active_set: bool = True,
-        active_set_num: int = 3,
-        max_swaps: int = 100,
-        scale_down_factor: float = 0.8,
-        screen_size: int = 1000,
-        lambda_grid: Optional[List[Sequence[float]]] = None,
-        exclude_first_k: int = 0,
-        intercept: bool = True,
-        lows: Union[np.ndarray, float] = -float('inf'),
-        highs: Union[np.ndarray, float] = +float('inf'), ) -> l0learn.models.FitModel:
+def fit(
+    X: Union[np.ndarray, csc_matrix],
+    y: np.ndarray,
+    loss: str = "SquaredError",
+    penalty: str = "L0",
+    algorithm: str = "CD",
+    max_support_size: int = 100,
+    num_lambda: Optional[int] = 100,
+    num_gamma: Optional[int] = 1,
+    gamma_max: float = 10.0,
+    gamma_min: float = 0.0001,
+    partial_sort: bool = True,
+    max_iter: int = 200,
+    rtol: float = 1e-6,
+    atol: float = 1e-9,
+    active_set: bool = True,
+    active_set_num: int = 3,
+    max_swaps: int = 100,
+    scale_down_factor: float = 0.8,
+    screen_size: int = 1000,
+    lambda_grid: Optional[List[Sequence[float]]] = None,
+    exclude_first_k: int = 0,
+    intercept: bool = True,
+    lows: Union[np.ndarray, float] = -float("inf"),
+    highs: Union[np.ndarray, float] = +float("inf"),
+) -> l0learn.models.FitModel:
     """
     Computes the regularization path for the specified loss function and penalty function.
 
@@ -404,137 +499,147 @@ def fit(X: Union[np.ndarray, csc_matrix],
     --------
     >>>fit_model = l0learn.fit(X, y, penalty="L0", max_support_size=20)
     """
-    check = _fit_check(X=X,
-                       y=y,
-                       loss=loss,
-                       penalty=penalty,
-                       algorithm=algorithm,
-                       max_support_size=max_support_size,
-                       num_lambda=num_lambda,
-                       num_gamma=num_gamma,
-                       gamma_max=gamma_max,
-                       gamma_min=gamma_min,
-                       partial_sort=partial_sort,
-                       max_iter=max_iter,
-                       rtol=rtol,
-                       atol=atol,
-                       active_set=active_set,
-                       active_set_num=active_set_num,
-                       max_swaps=max_swaps,
-                       scale_down_factor=scale_down_factor,
-                       screen_size=screen_size,
-                       lambda_grid=lambda_grid,
-                       exclude_first_k=exclude_first_k,
-                       intercept=intercept,
-                       lows=lows,
-                       highs=highs)
+    check = _fit_check(
+        X=X,
+        y=y,
+        loss=loss,
+        penalty=penalty,
+        algorithm=algorithm,
+        max_support_size=max_support_size,
+        num_lambda=num_lambda,
+        num_gamma=num_gamma,
+        gamma_max=gamma_max,
+        gamma_min=gamma_min,
+        partial_sort=partial_sort,
+        max_iter=max_iter,
+        rtol=rtol,
+        atol=atol,
+        active_set=active_set,
+        active_set_num=active_set_num,
+        max_swaps=max_swaps,
+        scale_down_factor=scale_down_factor,
+        screen_size=screen_size,
+        lambda_grid=lambda_grid,
+        exclude_first_k=exclude_first_k,
+        intercept=intercept,
+        lows=lows,
+        highs=highs,
+    )
 
     max_support_size = check["max_support_size"]
     screen_size = check["screen_size"]
-    y = check['y']
-    penalty = check['penalty']
-    gamma_max = check['gamma_max']
-    gamma_min = check['gamma_min']
-    lambda_grid = check['lambda_grid']
-    num_gamma = check['num_gamma']
-    num_lambda = check['num_lambda']
-    auto_lambda = check['auto_lambda']
-    with_bounds = check['with_bounds']
-    lows = check['lows']
-    highs = check['highs']
+    y = check["y"]
+    penalty = check["penalty"]
+    gamma_max = check["gamma_max"]
+    gamma_min = check["gamma_min"]
+    lambda_grid = check["lambda_grid"]
+    num_gamma = check["num_gamma"]
+    num_lambda = check["num_lambda"]
+    auto_lambda = check["auto_lambda"]
+    with_bounds = check["with_bounds"]
+    lows = check["lows"]
+    highs = check["highs"]
 
     if isinstance(X, np.ndarray):
-        c_results = _L0LearnFit_dense(X,                  # const T &X,
-                                      y,                  # const arma::vec &y,
-                                      loss,               # const std::string Loss,
-                                      penalty,            # const std::string Penalty,
-                                      algorithm,          # const std::string Algorithm,
-                                      max_support_size,   # const std::size_t NnzStopNum,
-                                      num_lambda,         # const std::size_t G_ncols,
-                                      num_gamma,          # const std::size_t G_nrows,
-                                      gamma_max,          # const double Lambda2Max,
-                                      gamma_min,          # const double Lambda2Min,
-                                      partial_sort,       # const bool PartialSort,
-                                      max_iter,           # const std::size_t MaxIters,
-                                      rtol,               # const double rtol,
-                                      atol,               # const double atol,
-                                      active_set,         # const bool ActiveSet,
-                                      active_set_num,     # const std::size_t ActiveSetNum,
-                                      max_swaps,          # const std::size_t MaxNumSwaps,
-                                      scale_down_factor,  # const double ScaleDownFactor,
-                                      screen_size,        # const std::size_t ScreenSize,
-                                      not auto_lambda,    # const bool LambdaU,
-                                      lambda_grid,        # const std::vector<std::vector<double>> &Lambdas,
-                                      exclude_first_k,    # const std::size_t ExcludeFirstK,
-                                      intercept,          # const bool Intercept,
-                                      with_bounds,        # const bool withBounds,
-                                      lows,               # const arma::vec &Lows,
-                                      highs)              # const arma::vec &Highs
+        c_results = _L0LearnFit_dense(
+            X,  # const T &X,
+            y,  # const arma::vec &y,
+            loss,  # const std::string Loss,
+            penalty,  # const std::string Penalty,
+            algorithm,  # const std::string Algorithm,
+            max_support_size,  # const std::size_t NnzStopNum,
+            num_lambda,  # const std::size_t G_ncols,
+            num_gamma,  # const std::size_t G_nrows,
+            gamma_max,  # const double Lambda2Max,
+            gamma_min,  # const double Lambda2Min,
+            partial_sort,  # const bool PartialSort,
+            max_iter,  # const std::size_t MaxIters,
+            rtol,  # const double rtol,
+            atol,  # const double atol,
+            active_set,  # const bool ActiveSet,
+            active_set_num,  # const std::size_t ActiveSetNum,
+            max_swaps,  # const std::size_t MaxNumSwaps,
+            scale_down_factor,  # const double ScaleDownFactor,
+            screen_size,  # const std::size_t ScreenSize,
+            not auto_lambda,  # const bool LambdaU,
+            lambda_grid,  # const std::vector<std::vector<double>> &Lambdas,
+            exclude_first_k,  # const std::size_t ExcludeFirstK,
+            intercept,  # const bool Intercept,
+            with_bounds,  # const bool withBounds,
+            lows,  # const arma::vec &Lows,
+            highs,
+        )  # const arma::vec &Highs
     else:  # isinstance(X, csc_matrix)
-        c_results = _L0LearnFit_sparse(as_sparse_mat(X),  # const T &X,
-                                       y,                 # const arma::vec &y,
-                                       loss,              # const std::string Loss,
-                                       penalty,           # const std::string Penalty,
-                                       algorithm,         # const std::string Algorithm,
-                                       max_support_size,  # const std::size_t NnzStopNum,
-                                       num_lambda,        # const std::size_t G_ncols,
-                                       num_gamma,         # const std::size_t G_nrows,
-                                       gamma_max,         # const double Lambda2Max,
-                                       gamma_min,         # const double Lambda2Min,
-                                       partial_sort,      # const bool PartialSort,
-                                       max_iter,          # const std::size_t MaxIters,
-                                       rtol,              # const double rtol,
-                                       atol,              # const double atol,
-                                       active_set,        # const bool ActiveSet,
-                                       active_set_num,    # const std::size_t ActiveSetNum,
-                                       max_swaps,         # const std::size_t MaxNumSwaps,
-                                       scale_down_factor, # const double ScaleDownFactor,
-                                       screen_size,       # const std::size_t ScreenSize,
-                                       not auto_lambda,   # const bool LambdaU,
-                                       lambda_grid,       # const std::vector<std::vector<double>> &Lambdas,
-                                       exclude_first_k,   # const std::size_t ExcludeFirstK,
-                                       intercept,         # const bool Intercept,
-                                       with_bounds,       # const bool withBounds,
-                                       lows,              # const arma::vec &Lows,
-                                       highs)             # const arma::vec &Highs
+        c_results = _L0LearnFit_sparse(
+            as_sparse_mat(X),  # const T &X,
+            y,  # const arma::vec &y,
+            loss,  # const std::string Loss,
+            penalty,  # const std::string Penalty,
+            algorithm,  # const std::string Algorithm,
+            max_support_size,  # const std::size_t NnzStopNum,
+            num_lambda,  # const std::size_t G_ncols,
+            num_gamma,  # const std::size_t G_nrows,
+            gamma_max,  # const double Lambda2Max,
+            gamma_min,  # const double Lambda2Min,
+            partial_sort,  # const bool PartialSort,
+            max_iter,  # const std::size_t MaxIters,
+            rtol,  # const double rtol,
+            atol,  # const double atol,
+            active_set,  # const bool ActiveSet,
+            active_set_num,  # const std::size_t ActiveSetNum,
+            max_swaps,  # const std::size_t MaxNumSwaps,
+            scale_down_factor,  # const double ScaleDownFactor,
+            screen_size,  # const std::size_t ScreenSize,
+            not auto_lambda,  # const bool LambdaU,
+            lambda_grid,  # const std::vector<std::vector<double>> &Lambdas,
+            exclude_first_k,  # const std::size_t ExcludeFirstK,
+            intercept,  # const bool Intercept,
+            with_bounds,  # const bool withBounds,
+            lows,  # const arma::vec &Lows,
+            highs,
+        )  # const arma::vec &Highs
 
-    results = FitModel(settings={'loss': loss, 'intercept': intercept, 'penalty': penalty},
-                       lambda_0=c_results.Lambda0,
-                       gamma=c_results.Lambda12,
-                       support_size=c_results.NnzCount,
-                       coeffs=c_results.Beta,
-                       intercepts=c_results.Intercept,
-                       converged=c_results.Converged)
+    results = FitModel(
+        settings={"loss": loss, "intercept": intercept, "penalty": penalty},
+        lambda_0=c_results.Lambda0,
+        gamma=c_results.Lambda12,
+        support_size=c_results.NnzCount,
+        coeffs=c_results.Beta,
+        intercepts=c_results.Intercept,
+        converged=c_results.Converged,
+    )
     return results
 
 
-def cvfit(X: Union[np.ndarray, csc_matrix],
-          y: np.ndarray,
-          loss: str = "SquaredError",
-          penalty: str = "L0",
-          algorithm: str = "CD",
-          num_folds: int = 10,
-          seed: int = 1,
-          max_support_size: int = 100,
-          num_lambda: Optional[int] = 100,
-          num_gamma: Optional[int] = 1,
-          gamma_max: float = 10.,
-          gamma_min: float = .0001,
-          partial_sort: bool = True,
-          max_iter: int = 200,
-          rtol: float = 1e-6,
-          atol: float = 1e-9,
-          active_set: bool = True,
-          active_set_num: int = 3,
-          max_swaps: int = 100,
-          scale_down_factor: float = 0.8,
-          screen_size: int = 1000,
-          lambda_grid: Optional[List[Sequence[float]]] = None,
-          exclude_first_k: int = 0,
-          intercept: bool = True,
-          lows: Union[np.ndarray, float] = -float('inf'),
-          highs: Union[np.ndarray, float] = +float('inf'), ) -> l0learn.models.CVFitModel:
-    """ Computes the regularization path for the specified loss function and penalty function and performs K-fold
+def cvfit(
+    X: Union[np.ndarray, csc_matrix],
+    y: np.ndarray,
+    loss: str = "SquaredError",
+    penalty: str = "L0",
+    algorithm: str = "CD",
+    num_folds: int = 10,
+    seed: int = 1,
+    max_support_size: int = 100,
+    num_lambda: Optional[int] = 100,
+    num_gamma: Optional[int] = 1,
+    gamma_max: float = 10.0,
+    gamma_min: float = 0.0001,
+    partial_sort: bool = True,
+    max_iter: int = 200,
+    rtol: float = 1e-6,
+    atol: float = 1e-9,
+    active_set: bool = True,
+    active_set_num: int = 3,
+    max_swaps: int = 100,
+    scale_down_factor: float = 0.8,
+    screen_size: int = 1000,
+    lambda_grid: Optional[List[Sequence[float]]] = None,
+    exclude_first_k: int = 0,
+    intercept: bool = True,
+    lows: Union[np.ndarray, float] = -float("inf"),
+    highs: Union[np.ndarray, float] = +float("inf"),
+) -> l0learn.models.CVFitModel:
+    """Computes the regularization path for the specified loss function and penalty function and performs K-fold
     cross-validation.
 
     Parameters
@@ -693,116 +798,126 @@ def cvfit(X: Union[np.ndarray, csc_matrix],
     >>>fit_model = l0learn.fit(X, y, penalty="L0", max_support_size=20)
     """
 
-    check = _fit_check(X=X,
-                       y=y,
-                       loss=loss,
-                       penalty=penalty,
-                       algorithm=algorithm,
-                       max_support_size=max_support_size,
-                       num_lambda=num_lambda,
-                       num_gamma=num_gamma,
-                       gamma_max=gamma_max,
-                       gamma_min=gamma_min,
-                       partial_sort=partial_sort,
-                       max_iter=max_iter,
-                       rtol=rtol,
-                       atol=atol,
-                       active_set=active_set,
-                       active_set_num=active_set_num,
-                       max_swaps=max_swaps,
-                       scale_down_factor=scale_down_factor,
-                       screen_size=screen_size,
-                       lambda_grid=lambda_grid,
-                       exclude_first_k=exclude_first_k,
-                       intercept=intercept,
-                       lows=lows,
-                       highs=highs)
+    check = _fit_check(
+        X=X,
+        y=y,
+        loss=loss,
+        penalty=penalty,
+        algorithm=algorithm,
+        max_support_size=max_support_size,
+        num_lambda=num_lambda,
+        num_gamma=num_gamma,
+        gamma_max=gamma_max,
+        gamma_min=gamma_min,
+        partial_sort=partial_sort,
+        max_iter=max_iter,
+        rtol=rtol,
+        atol=atol,
+        active_set=active_set,
+        active_set_num=active_set_num,
+        max_swaps=max_swaps,
+        scale_down_factor=scale_down_factor,
+        screen_size=screen_size,
+        lambda_grid=lambda_grid,
+        exclude_first_k=exclude_first_k,
+        intercept=intercept,
+        lows=lows,
+        highs=highs,
+    )
 
     max_support_size = check["max_support_size"]
     screen_size = check["screen_size"]
-    y = check['y']
-    penalty = check['penalty']
-    gamma_max = check['gamma_max']
-    gamma_min = check['gamma_min']
-    lambda_grid = check['lambda_grid']
-    num_gamma = check['num_gamma']
-    num_lambda = check['num_lambda']
-    auto_lambda = check['auto_lambda']
-    with_bounds = check['with_bounds']
-    lows = check['lows']
-    highs = check['highs']
+    y = check["y"]
+    penalty = check["penalty"]
+    gamma_max = check["gamma_max"]
+    gamma_min = check["gamma_min"]
+    lambda_grid = check["lambda_grid"]
+    num_gamma = check["num_gamma"]
+    num_lambda = check["num_lambda"]
+    auto_lambda = check["auto_lambda"]
+    with_bounds = check["with_bounds"]
+    lows = check["lows"]
+    highs = check["highs"]
 
     n, p = X.shape
 
     if not isinstance(num_folds, int) or num_folds < 2 or num_folds > n:
-        raise ValueError(f"expected num_folds parameter to be a positive integer less than {n}, but got {num_folds}")
+        raise ValueError(
+            f"expected num_folds parameter to be a positive integer less than {n}, but got {num_folds}"
+        )
 
     if isinstance(X, np.ndarray):
-        c_results = _L0LearnCV_dense(X,
-                                     y,
-                                     loss,
-                                     penalty,
-                                     algorithm,
-                                     max_support_size,
-                                     num_lambda,
-                                     num_gamma,
-                                     gamma_max,
-                                     gamma_min,
-                                     partial_sort,
-                                     max_iter,
-                                     rtol,
-                                     atol,
-                                     active_set,
-                                     active_set_num,
-                                     max_swaps,
-                                     scale_down_factor,
-                                     screen_size,
-                                     not auto_lambda,
-                                     lambda_grid,
-                                     num_folds,
-                                     seed,
-                                     exclude_first_k,
-                                     intercept,
-                                     with_bounds,
-                                     lows,
-                                     highs)
+        c_results = _L0LearnCV_dense(
+            X,
+            y,
+            loss,
+            penalty,
+            algorithm,
+            max_support_size,
+            num_lambda,
+            num_gamma,
+            gamma_max,
+            gamma_min,
+            partial_sort,
+            max_iter,
+            rtol,
+            atol,
+            active_set,
+            active_set_num,
+            max_swaps,
+            scale_down_factor,
+            screen_size,
+            not auto_lambda,
+            lambda_grid,
+            num_folds,
+            seed,
+            exclude_first_k,
+            intercept,
+            with_bounds,
+            lows,
+            highs,
+        )
     else:  # isinstance(X, csc_matrix)
-        c_results = _L0LearnCV_sparse(as_sparse_mat(X),
-                                      y,
-                                      loss,
-                                      penalty,
-                                      algorithm,
-                                      max_support_size,
-                                      num_lambda,
-                                      num_gamma,
-                                      gamma_max,
-                                      gamma_min,
-                                      partial_sort,
-                                      max_iter,
-                                      rtol,
-                                      atol,
-                                      active_set,
-                                      active_set_num,
-                                      max_swaps,
-                                      scale_down_factor,
-                                      screen_size,
-                                      auto_lambda,
-                                      lambda_grid,
-                                      num_folds,
-                                      seed,
-                                      exclude_first_k,
-                                      intercept,
-                                      with_bounds,
-                                      lows,
-                                      highs)
+        c_results = _L0LearnCV_sparse(
+            as_sparse_mat(X),
+            y,
+            loss,
+            penalty,
+            algorithm,
+            max_support_size,
+            num_lambda,
+            num_gamma,
+            gamma_max,
+            gamma_min,
+            partial_sort,
+            max_iter,
+            rtol,
+            atol,
+            active_set,
+            active_set_num,
+            max_swaps,
+            scale_down_factor,
+            screen_size,
+            auto_lambda,
+            lambda_grid,
+            num_folds,
+            seed,
+            exclude_first_k,
+            intercept,
+            with_bounds,
+            lows,
+            highs,
+        )
 
-    results = CVFitModel(settings={'loss': loss, 'intercept': intercept, 'penalty': penalty},
-                         lambda_0=c_results.Lambda0,
-                         gamma=c_results.Lambda12,
-                         support_size=c_results.NnzCount,
-                         coeffs=c_results.Beta,
-                         intercepts=c_results.Intercept,
-                         converged=c_results.Converged,
-                         cv_means=c_results.CVMeans,
-                         cv_sds=c_results.CVSDs)
+    results = CVFitModel(
+        settings={"loss": loss, "intercept": intercept, "penalty": penalty},
+        lambda_0=c_results.Lambda0,
+        gamma=c_results.Lambda12,
+        support_size=c_results.NnzCount,
+        coeffs=c_results.Beta,
+        intercepts=c_results.Intercept,
+        converged=c_results.Converged,
+        cv_means=c_results.CVMeans,
+        cv_sds=c_results.CVSDs,
+    )
     return results

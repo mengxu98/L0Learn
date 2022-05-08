@@ -1,14 +1,15 @@
 #ifndef INTERFACE_H
 #define INTERFACE_H
 
-#include "FitResult.h"
-#include "Grid.h"
-#include "GridParams.h"
-#include <armadillo>
 #include <string>
 #include <tuple>
 #include <utility>
 #include <vector>
+
+#include "FitResult.h"
+#include "Grid.h"
+#include "GridParams.h"
+#include "arma_includes.h"
 
 // Make an external struct
 
@@ -28,9 +29,12 @@ struct fitmodel {
            arma::field<arma::sp_mat> &beta,
            std::vector<std::vector<double>> &intercept,
            std::vector<std::vector<bool>> &converged)
-      : Lambda0(lambda0), Lambda12(lambda12),
-        NnzCount(nnzCount), Beta(beta),
-        Intercept(intercept), Converged(converged) {}
+      : Lambda0(lambda0),
+        Lambda12(lambda12),
+        NnzCount(nnzCount),
+        Beta(beta),
+        Intercept(intercept),
+        Converged(converged) {}
 };
 
 struct cvfitmodel : fitmodel {
@@ -46,54 +50,37 @@ struct cvfitmodel : fitmodel {
              arma::field<arma::sp_mat> &beta,
              std::vector<std::vector<double>> &intercept,
              std::vector<std::vector<bool>> &converged,
-             arma::field<arma::vec> & cVMeans,
-             arma::field<arma::vec> & cVSDs)
-      : fitmodel(lambda0,
-                 lambda12,
-                 nnzCount,
-                 beta,
-                 intercept,
-                 converged),
-        CVMeans(cVMeans), CVSDs(cVSDs) {}
+             arma::field<arma::vec> &cVMeans, arma::field<arma::vec> &cVSDs)
+      : fitmodel(lambda0, lambda12, nnzCount, beta, intercept, converged),
+        CVMeans(cVMeans),
+        CVSDs(cVSDs) {}
 };
 
 template <typename T>
-GridParams<T> makeGridParams(const std::string Loss,
-                             const std::string Penalty,
-                             const std::string Algorithm,
-                             const std::size_t NnzStopNum,
-                             const std::size_t G_ncols,
-                             const std::size_t G_nrows,
-                             const double Lambda2Max,
-                             const double Lambda2Min,
-                             const bool PartialSort,
-                             const std::size_t MaxIters,
-                             const double rtol,
-                             const double atol,
-                             const bool ActiveSet,
-                             const std::size_t ActiveSetNum,
-                             const std::size_t MaxNumSwaps,
-                             const double ScaleDownFactor,
-                             const std::size_t ScreenSize,
-                             const bool LambdaU,
-                             const std::vector<std::vector<double>>& Lambdas,
-                             const std::size_t ExcludeFirstK,
-                             const bool Intercept,
-                             const bool withBounds,
-                             const arma::vec &Lows,
-                             const arma::vec &Highs) {
+GridParams<T> makeGridParams(
+    const std::string Loss, const std::string Penalty,
+    const std::string Algorithm, const std::size_t NnzStopNum,
+    const std::size_t G_ncols, const std::size_t G_nrows,
+    const double Lambda2Max, const double Lambda2Min, const bool PartialSort,
+    const std::size_t MaxIters, const double rtol, const double atol,
+    const bool ActiveSet, const std::size_t ActiveSetNum,
+    const std::size_t MaxNumSwaps, const double ScaleDownFactor,
+    const std::size_t ScreenSize, const bool LambdaU,
+    const std::vector<std::vector<double>> &Lambdas,
+    const std::size_t ExcludeFirstK, const bool Intercept,
+    const bool withBounds, const arma::vec &Lows, const arma::vec &Highs) {
   GridParams<T> PG;
   PG.NnzStopNum = NnzStopNum;
   PG.G_ncols = G_ncols;
   PG.G_nrows = G_nrows;
   PG.Lambda2Max = Lambda2Max;
   PG.Lambda2Min = Lambda2Min;
-  PG.LambdaMinFactor = Lambda2Min; //
+  PG.LambdaMinFactor = Lambda2Min;  //
   PG.PartialSort = PartialSort;
   PG.ScaleDownFactor = ScaleDownFactor;
   PG.LambdaU = LambdaU;
   PG.LambdasGrid = Lambdas;
-  PG.Lambdas = Lambdas[0]; // to handle the case of L0 (i.e., Grid1D)
+  PG.Lambdas = Lambdas[0];  // to handle the case of L0 (i.e., Grid1D)
   PG.intercept = Intercept;
 
   Params<T> P;
@@ -138,33 +125,20 @@ GridParams<T> makeGridParams(const std::string Loss,
 }
 
 template <typename T>
-fitmodel L0LearnFit(const T &X,
-                    const arma::vec &y,
-                    const std::string Loss,
-                    const std::string Penalty,
-                    const std::string Algorithm,
-                    const std::size_t NnzStopNum,
-                    const std::size_t G_ncols,
-                    const std::size_t G_nrows,
-                    const double Lambda2Max,
-                    const double Lambda2Min,
-                    const bool PartialSort,
-                    const std::size_t MaxIters,
-                    const double rtol,
-                    const double atol,
-                    const bool ActiveSet,
+fitmodel L0LearnFit(const T &X, const arma::vec &y, const std::string Loss,
+                    const std::string Penalty, const std::string Algorithm,
+                    const std::size_t NnzStopNum, const std::size_t G_ncols,
+                    const std::size_t G_nrows, const double Lambda2Max,
+                    const double Lambda2Min, const bool PartialSort,
+                    const std::size_t MaxIters, const double rtol,
+                    const double atol, const bool ActiveSet,
                     const std::size_t ActiveSetNum,
-                    const std::size_t MaxNumSwaps,
-                    const double ScaleDownFactor,
-                    const std::size_t ScreenSize,
-                    const bool LambdaU,
+                    const std::size_t MaxNumSwaps, const double ScaleDownFactor,
+                    const std::size_t ScreenSize, const bool LambdaU,
                     const std::vector<std::vector<double>> &Lambdas,
-                    const std::size_t ExcludeFirstK,
-                    const bool Intercept,
-                    const bool withBounds,
-                    const arma::vec &Lows,
+                    const std::size_t ExcludeFirstK, const bool Intercept,
+                    const bool withBounds, const arma::vec &Lows,
                     const arma::vec &Highs) {
-
   // arma::cout << "L0LearnCore.h L0LearnFit Entered.";
   // arma::cout << "L0LearnCore.h X shape = " << X.n_rows << ", " << X.n_cols <<
   // "\n"; arma::cout << "L0LearnCore.h y shape = " << y.n_rows << ", " <<
@@ -173,30 +147,11 @@ fitmodel L0LearnFit(const T &X,
   // Highs shape = " << Highs.n_rows << ", " << Highs.n_cols << "\n";
 
   // arma::cout << "makeGridParams Entering";
-  GridParams<T> PG = makeGridParams<T>(Loss,
-                                       Penalty,
-                                       Algorithm,
-                                       NnzStopNum,
-                                       G_ncols,
-                                       G_nrows,
-                                       Lambda2Max,
-                                       Lambda2Min,
-                                       PartialSort,
-                                       MaxIters,
-                                       rtol,
-                                       atol,
-                                       ActiveSet,
-                                       ActiveSetNum,
-                                       MaxNumSwaps,
-                                       ScaleDownFactor,
-                                       ScreenSize,
-                                       LambdaU,
-                                       Lambdas,
-                                       ExcludeFirstK,
-                                       Intercept,
-                                       withBounds,
-                                       Lows,
-                                       Highs);
+  GridParams<T> PG = makeGridParams<T>(
+      Loss, Penalty, Algorithm, NnzStopNum, G_ncols, G_nrows, Lambda2Max,
+      Lambda2Min, PartialSort, MaxIters, rtol, atol, ActiveSet, ActiveSetNum,
+      MaxNumSwaps, ScaleDownFactor, ScreenSize, LambdaU, Lambdas, ExcludeFirstK,
+      Intercept, withBounds, Lows, Highs);
 
   // arma::cout << "PG.P.Specs.L0 " << PG.P.Specs.L0;
   // arma::cout << "PG.P.Specs.CD " << PG.P.Specs.CD;
@@ -222,64 +177,29 @@ fitmodel L0LearnFit(const T &X,
     Bs[i] = B;
   }
   // arma::cout << "fitmodel Entering";
-  return fitmodel(
-      G.Lambda0, G.Lambda12, G.NnzCount, Bs, G.Intercepts, G.Converged);
+  return fitmodel(G.Lambda0, G.Lambda12, G.NnzCount, Bs, G.Intercepts,
+                  G.Converged);
 }
 
 template <typename T>
-cvfitmodel L0LearnCV(const T &X,
-                     const arma::vec &y,
-                     const std::string Loss,
-                     const std::string Penalty,
-                     const std::string Algorithm,
-                     const unsigned int NnzStopNum,
-                     const unsigned int G_ncols,
-                     const unsigned int G_nrows,
-                     const double Lambda2Max,
-                     const double Lambda2Min,
-                     const bool PartialSort,
-                     const unsigned int MaxIters,
-                     const double rtol,
-                     const double atol,
-                     const bool ActiveSet,
-                     const unsigned int ActiveSetNum,
-                     const unsigned int MaxNumSwaps,
-                     const double ScaleDownFactor,
-                     const unsigned int ScreenSize,
-                     const bool LambdaU,
-                     const std::vector<std::vector<double>> Lambdas,
-                     const unsigned int nfolds,
-                     const size_t seed,
-                     const unsigned int ExcludeFirstK,
-                     const bool Intercept,
-                     const bool withBounds,
-                     const arma::vec &Lows,
-                     const arma::vec &Highs) {
-
-  GridParams<T> PG = makeGridParams<T>(Loss,
-                                       Penalty,
-                                       Algorithm,
-                                       NnzStopNum,
-                                       G_ncols,
-                                       G_nrows,
-                                       Lambda2Max,
-                                       Lambda2Min,
-                                       PartialSort,
-                                       MaxIters,
-                                       rtol,
-                                       atol,
-                                       ActiveSet,
-                                       ActiveSetNum,
-                                       MaxNumSwaps,
-                                       ScaleDownFactor,
-                                       ScreenSize,
-                                       LambdaU,
-                                       Lambdas,
-                                       ExcludeFirstK,
-                                       Intercept,
-                                       withBounds,
-                                       Lows,
-                                       Highs);
+cvfitmodel L0LearnCV(
+    const T &X, const arma::vec &y, const std::string Loss,
+    const std::string Penalty, const std::string Algorithm,
+    const unsigned int NnzStopNum, const unsigned int G_ncols,
+    const unsigned int G_nrows, const double Lambda2Max,
+    const double Lambda2Min, const bool PartialSort,
+    const unsigned int MaxIters, const double rtol, const double atol,
+    const bool ActiveSet, const unsigned int ActiveSetNum,
+    const unsigned int MaxNumSwaps, const double ScaleDownFactor,
+    const unsigned int ScreenSize, const bool LambdaU,
+    const std::vector<std::vector<double>> Lambdas, const unsigned int nfolds,
+    const size_t seed, const unsigned int ExcludeFirstK, const bool Intercept,
+    const bool withBounds, const arma::vec &Lows, const arma::vec &Highs) {
+  GridParams<T> PG = makeGridParams<T>(
+      Loss, Penalty, Algorithm, NnzStopNum, G_ncols, G_nrows, Lambda2Max,
+      Lambda2Min, PartialSort, MaxIters, rtol, atol, ActiveSet, ActiveSetNum,
+      MaxNumSwaps, ScaleDownFactor, ScreenSize, LambdaU, Lambdas, ExcludeFirstK,
+      Intercept, withBounds, Lows, Highs);
 
   Grid<T> G(X, y, PG);
   arma::arma_rng::set_seed(seed);
@@ -331,15 +251,13 @@ cvfitmodel L0LearnCV(const T &X,
     else
       validationindices.resize(samplesinlastfold);
 
-    std::iota(
-        validationindices.begin(), validationindices.end(), samplesperfold * j);
+    std::iota(validationindices.begin(), validationindices.end(),
+              samplesperfold * j);
 
     std::vector<std::size_t> trainingindices;
 
     std::set_difference(
-        fullindices.begin(),
-        fullindices.end(),
-        validationindices.begin(),
+        fullindices.begin(), fullindices.end(), validationindices.begin(),
         validationindices.end(),
         std::inserter(trainingindices, trainingindices.begin()));
 
@@ -368,11 +286,11 @@ cvfitmodel L0LearnCV(const T &X,
 
     PG.LambdaU = true;
     PG.XtrAvailable =
-        false; // reset XtrAvailable since its changed upon every call
+        false;  // reset XtrAvailable since its changed upon every call
     PG.LambdasGrid = G.Lambda0;
     PG.NnzStopNum =
-        p + 1; // remove any constraints on the supp size when fitting over the
-               // cv folds // +1 is imp to avoid =p edge case
+        p + 1;  // remove any constraints on the supp size when fitting over the
+                // cv folds // +1 is imp to avoid =p edge case
     if (PG.P.Specs.L0 == true) {
       PG.Lambdas = PG.LambdasGrid[0];
     }
@@ -418,14 +336,8 @@ cvfitmodel L0LearnCV(const T &X,
     CVSDs[i] = arma::stddev(CVError[i], 0, 1);
   }
 
-  return cvfitmodel(G.Lambda0,
-                    G.Lambda12,
-                    G.NnzCount,
-                    Bs,
-                    G.Intercepts,
-                    G.Converged,
-                    CVMeans,
-                    CVSDs);
+  return cvfitmodel(G.Lambda0, G.Lambda12, G.NnzCount, Bs, G.Intercepts,
+                    G.Converged, CVMeans, CVSDs);
 }
 
-#endif // INTERFACE_H
+#endif  // INTERFACE_H

@@ -12,10 +12,12 @@ from scipy.sparse import csc_matrix, vstack, hstack, find
 from scipy.stats import multivariate_normal, binom
 
 
-def regularization_loss(coeffs: csc_matrix,
-                        l0: Union[float, Sequence[float]] = 0,
-                        l1: Union[float, Sequence[float]] = 0,
-                        l2: Union[float, Sequence[float]] = 0, ) -> Union[float, np.ndarray]:
+def regularization_loss(
+    coeffs: csc_matrix,
+    l0: Union[float, Sequence[float]] = 0,
+    l1: Union[float, Sequence[float]] = 0,
+    l2: Union[float, Sequence[float]] = 0,
+) -> Union[float, np.ndarray]:
     """
     Calculates the regularization loss for a path of (or individual) solution(s).
 
@@ -50,12 +52,16 @@ def regularization_loss(coeffs: csc_matrix,
     elif infer_penalties.ndim == 1:
         num_penalties = len(infer_penalties)
     else:
-        raise ValueError(f"expected penalties l0, l1, and l2 mutually broadcast to a float or a 1D array,"
-                         f" but got {infer_penalties.ndim}D array.")
+        raise ValueError(
+            f"expected penalties l0, l1, and l2 mutually broadcast to a float or a 1D array,"
+            f" but got {infer_penalties.ndim}D array."
+        )
 
     if num_penalties != num_solutions:
-        raise ValueError(f"expected number of penalties to be equal to the number of solutions if multiple penalties "
-                         f"are provided, but got {num_penalties} penalties and {num_solutions} solutions.")
+        raise ValueError(
+            f"expected number of penalties to be equal to the number of solutions if multiple penalties "
+            f"are provided, but got {num_penalties} penalties and {num_solutions} solutions."
+        )
 
     l0 = np.broadcast_to(l0, [num_penalties])
     l1 = np.broadcast_to(l1, [num_penalties])
@@ -64,16 +70,20 @@ def regularization_loss(coeffs: csc_matrix,
     if num_solutions == 1:
         _, _, values = find(coeffs)
 
-        return float(l0 * len(values) + l1 * sum(abs(values)) + sum((np.sqrt(l2) * values) ** 2))
+        return float(
+            l0 * len(values) + l1 * sum(abs(values)) + sum((np.sqrt(l2) * values) ** 2)
+        )
     else:  # TODO: Implement this regularization loss better than a for loop over num_solutions!
         _, num_solutions = coeffs.shape
         loss = np.zeros(num_solutions)
 
         for solution_index in range(num_solutions):
-            loss[solution_index] = regularization_loss(coeffs[:, solution_index],
-                                                       l0=l0[solution_index],
-                                                       l1=l1[solution_index],
-                                                       l2=l2[solution_index])
+            loss[solution_index] = regularization_loss(
+                coeffs[:, solution_index],
+                l0=l0[solution_index],
+                l1=l1[solution_index],
+                l2=l2[solution_index],
+            )
 
     return loss
 
@@ -100,12 +110,14 @@ def regularization_loss(coeffs: csc_matrix,
 #     return reshape_metric_loss
 
 
-def squared_error(y_true: np.ndarray,
-                  y_pred: np.ndarray,
-                  coeffs: Optional[csc_matrix] = None,
-                  l0: Union[float, Sequence[float]] = 0,
-                  l1: Union[float, Sequence[float]] = 0,
-                  l2: Union[float, Sequence[float]] = 0) -> np.ndarray:
+def squared_error(
+    y_true: np.ndarray,
+    y_pred: np.ndarray,
+    coeffs: Optional[csc_matrix] = None,
+    l0: Union[float, Sequence[float]] = 0,
+    l1: Union[float, Sequence[float]] = 0,
+    l2: Union[float, Sequence[float]] = 0,
+) -> np.ndarray:
     """
     Calculates Squared Error loss of solution with optional regularization
 
@@ -136,13 +148,15 @@ def squared_error(y_true: np.ndarray,
     return squared_residuals + reg_loss
 
 
-def logistic_loss(y_true: np.ndarray,
-                  y_pred: np.ndarray,
-                  coeffs: Optional[csc_matrix] = None,
-                  l0: float = 0,
-                  l1: float = 0,
-                  l2: float = 0,
-                  eps: float = 1e-15) -> np.ndarray:
+def logistic_loss(
+    y_true: np.ndarray,
+    y_pred: np.ndarray,
+    coeffs: Optional[csc_matrix] = None,
+    l0: float = 0,
+    l1: float = 0,
+    l2: float = 0,
+    eps: float = 1e-15,
+) -> np.ndarray:
     """
     Calculates Logistic Loss of solution with optional regularization
 
@@ -179,17 +193,21 @@ def logistic_loss(y_true: np.ndarray,
 
     y_pred = np.clip(y_pred, eps, 1 - eps)
 
-    log_loss = -(y_true*np.log(y_pred) + (1-y_true)*np.log(1-y_pred)).sum(axis=0)
+    log_loss = -(y_true * np.log(y_pred) + (1 - y_true) * np.log(1 - y_pred)).sum(
+        axis=0
+    )
 
     return log_loss + reg_loss
 
 
-def squared_hinge_loss(y_true: np.ndarray,
-                       y_pred: np.ndarray,
-                       coeffs: Optional[csc_matrix] = None,
-                       l0: float = 0,
-                       l1: float = 0,
-                       l2: float = 0, ) -> np.ndarray:
+def squared_hinge_loss(
+    y_true: np.ndarray,
+    y_pred: np.ndarray,
+    coeffs: Optional[csc_matrix] = None,
+    l0: float = 0,
+    l1: float = 0,
+    l2: float = 0,
+) -> np.ndarray:
     """
     Calculates Logistic Loss of solution with optional regularization
 
@@ -228,7 +246,8 @@ def squared_hinge_loss(y_true: np.ndarray,
 
 @dataclass(frozen=True, repr=False, eq=False)
 class FitModel:
-    """ FitModel returned by calling l0learn.fit(...) """
+    """FitModel returned by calling l0learn.fit(...)"""
+
     settings: Dict[str, Any]
     lambda_0: List[List[float]] = field(repr=False)
     gamma: List[float] = field(repr=False)
@@ -237,12 +256,19 @@ class FitModel:
     intercepts: List[List[float]] = field(repr=False)
     converged: List[List[bool]] = field(repr=False)
 
-    def _characteristics_as_pandas_table(self, new_data: Optional[Tuple[List[float],
-                                                                        List[List[float]],
-                                                                        List[List[int]],
-                                                                        List[List[float]],
-                                                                        List[List[bool]]]] = None) -> pd.DataFrame:
-        """ Formats FitModel's data as a Pandas DataFrame where each row is a solution in the regularization path.
+    def _characteristics_as_pandas_table(
+        self,
+        new_data: Optional[
+            Tuple[
+                List[float],
+                List[List[float]],
+                List[List[int]],
+                List[List[float]],
+                List[List[bool]],
+            ]
+        ] = None,
+    ) -> pd.DataFrame:
+        """Formats FitModel's data as a Pandas DataFrame where each row is a solution in the regularization path.
         The DataFrame is in of solutions being founnd.
 
         Parameters
@@ -260,25 +286,33 @@ class FitModel:
         if new_data is not None:
             gamma, lambda_0, support_size, intercepts, converged = new_data
         else:
-            gamma, lambda_0, support_size, intercepts, converged = (self.gamma,
-                                                                    self.lambda_0,
-                                                                    self.support_size,
-                                                                    self.intercepts,
-                                                                    self.converged)
+            gamma, lambda_0, support_size, intercepts, converged = (
+                self.gamma,
+                self.lambda_0,
+                self.support_size,
+                self.intercepts,
+                self.converged,
+            )
         tables = []
-        for gamma, lambda_sequence, support_sequence, intercept_sequence, converged_sequence in zip(gamma,
-                                                                                                    lambda_0,
-                                                                                                    support_size,
-                                                                                                    intercepts,
-                                                                                                    converged):
+        for (
+            gamma,
+            lambda_sequence,
+            support_sequence,
+            intercept_sequence,
+            converged_sequence,
+        ) in zip(gamma, lambda_0, support_size, intercepts, converged):
 
-            data = {'l0': lambda_sequence,
-                    'support_size': support_sequence,
-                    'intercept': intercept_sequence,
-                    'converged': converged_sequence}
+            data = {
+                "l0": lambda_sequence,
+                "support_size": support_sequence,
+                "intercept": intercept_sequence,
+                "converged": converged_sequence,
+            }
 
-            if len(self.settings['penalty']) > 2:
-                data[self.settings['penalty'][2:].lower()] = [gamma] * len(lambda_sequence)
+            if len(self.settings["penalty"]) > 2:
+                data[self.settings["penalty"][2:].lower()] = [gamma] * len(
+                    lambda_sequence
+                )
 
             tables.append(pd.DataFrame(data))
 
@@ -290,11 +324,13 @@ class FitModel:
     def __repr__(self) -> str:
         return f"{self.__class__.__name__}({self.settings})"
 
-    def coeff(self,
-              lambda_0: Optional[float] = None,
-              gamma: Optional[float] = None,
-              include_intercept: bool = True) -> csc_matrix:
-        """ Extracts the coefficient according to `lambda_0`, `gamma`, and `include_intercept`
+    def coeff(
+        self,
+        lambda_0: Optional[float] = None,
+        gamma: Optional[float] = None,
+        include_intercept: bool = True,
+    ) -> csc_matrix:
+        """Extracts the coefficient according to `lambda_0`, `gamma`, and `include_intercept`
 
         Values for lambda_0` and `gamma` do not need to be exact. The closest values, respectively, found in the
          regularization path will be used
@@ -334,12 +370,20 @@ class FitModel:
             if lambda_0 is None:
                 # Return all solutions
                 solutions = hstack(self.coeffs)
-                intercepts = [[intercept for intercept_list in self.intercepts for intercept in intercept_list]]
+                intercepts = [
+                    [
+                        intercept
+                        for intercept_list in self.intercepts
+                        for intercept in intercept_list
+                    ]
+                ]
             else:
                 # Return solution with closest lambda in first gamma
-                return self.coeff(gamma=self.gamma[0],
-                                  lambda_0=lambda_0,
-                                  include_intercept=include_intercept)
+                return self.coeff(
+                    gamma=self.gamma[0],
+                    lambda_0=lambda_0,
+                    include_intercept=include_intercept,
+                )
         else:
             gamma_index = int(np.argmin(np.abs(np.asarray(self.gamma) - gamma)))
             if lambda_0 is None:
@@ -348,7 +392,9 @@ class FitModel:
                 intercepts = [self.intercepts[gamma_index]]
             else:
                 # Return solution with closest lambda in gamma_index
-                lambda_index = int(np.argmin(np.abs(np.asarray(self.lambda_0[gamma_index]) - lambda_0)))
+                lambda_index = int(
+                    np.argmin(np.abs(np.asarray(self.lambda_0[gamma_index]) - lambda_0))
+                )
                 solutions = self.coeffs[gamma_index][:, lambda_index]
                 intercepts = [self.intercepts[gamma_index][lambda_index]]
 
@@ -357,10 +403,10 @@ class FitModel:
 
         return solutions
 
-    def characteristics(self,
-                        lambda_0: Optional[float] = None,
-                        gamma: Optional[float] = None) -> pd.DataFrame:
-        """ Formats the characteristics of the solutions that correspond to the specified `lambda_0` and `gamma` as a
+    def characteristics(
+        self, lambda_0: Optional[float] = None, gamma: Optional[float] = None
+    ) -> pd.DataFrame:
+        """Formats the characteristics of the solutions that correspond to the specified `lambda_0` and `gamma` as a
         pandas DataFrame where each row is a solution in the regularization path.
 
         Parameters
@@ -412,8 +458,7 @@ class FitModel:
                 converged = self.converged
             else:
                 # Return solution with closest lambda in first gamma
-                return self.characteristics(gamma=self.gamma[0],
-                                            lambda_0=lambda_0)
+                return self.characteristics(gamma=self.gamma[0], lambda_0=lambda_0)
         else:
             gamma_index = int(np.argmin(np.abs(np.asarray(self.gamma) - gamma)))
             if lambda_0 is None:
@@ -425,17 +470,27 @@ class FitModel:
                 converged = [self.converged[gamma_index]]
             else:
                 # Return solution with closest lambda in gamma_index
-                lambda_index = int(np.argmin(np.abs(np.asarray(self.lambda_0[gamma_index]) - lambda_0)))
+                lambda_index = int(
+                    np.argmin(np.abs(np.asarray(self.lambda_0[gamma_index]) - lambda_0))
+                )
                 intercepts = [[self.intercepts[gamma_index][lambda_index]]]
                 lambda_0 = [[self.lambda_0[gamma_index][lambda_index]]]
                 gamma = [self.gamma[gamma_index]]
                 support_size = [[self.support_size[gamma_index][lambda_index]]]
                 converged = [[self.converged[gamma_index][lambda_index]]]
 
-        return self._characteristics_as_pandas_table(new_data=(gamma, lambda_0, support_size, intercepts, converged))
+        return self._characteristics_as_pandas_table(
+            new_data=(gamma, lambda_0, support_size, intercepts, converged)
+        )
 
-    def plot(self, gamma: float = 0, show_lines: bool = False, include_legend: bool = True, **kwargs):
-        """ Plots the regularization path for a given gamma.
+    def plot(
+        self,
+        gamma: float = 0,
+        show_lines: bool = False,
+        include_legend: bool = True,
+        **kwargs,
+    ):
+        """Plots the regularization path for a given gamma.
 
         Parameters
         ----------
@@ -475,7 +530,9 @@ class FitModel:
             rows, cols, values = find(gamma_to_plot[:, col])
             support_size = len(rows)
             if support_size in seen_supports:
-                warnings.warn(f"Duplicate solution seen at support size {support_size}. Plotting only first solution")
+                warnings.warn(
+                    f"Duplicate solution seen at support size {support_size}. Plotting only first solution"
+                )
                 continue
             seen_supports.add(support_size)
             seen_coeffs.update(rows)
@@ -495,24 +552,37 @@ class FitModel:
         marker = kwargs.pop("marker", "o")
 
         for i, coeff in enumerate(seen_coeffs):
-            ax.plot(path_support_size, coef_value_over_path[i, :], label=coeff, linestyle=linestyle, marker=marker)
+            ax.plot(
+                path_support_size,
+                coef_value_over_path[i, :],
+                label=coeff,
+                linestyle=linestyle,
+                marker=marker,
+            )
 
         plt.ylabel("Coefficient Value")
         plt.xlabel("Support Size")
 
         if include_legend:
-            plt.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0., ncol=len(seen_coeffs)//10)
+            plt.legend(
+                bbox_to_anchor=(1.05, 1),
+                loc=2,
+                borderaxespad=0.0,
+                ncol=len(seen_coeffs) // 10,
+            )
 
         return ax
 
-    def score(self,
-              x: np.ndarray,
-              y: np.ndarray,
-              lambda_0: Optional[float] = None,
-              gamma: Optional[float] = None,
-              training: bool = False,
-              include_characteristics: bool = False) -> Union[pd.DataFrame, np.ndarray]:
-        """ Scores the performance of solutions in the regularization path at predicting `y_hat` based
+    def score(
+        self,
+        x: np.ndarray,
+        y: np.ndarray,
+        lambda_0: Optional[float] = None,
+        gamma: Optional[float] = None,
+        training: bool = False,
+        include_characteristics: bool = False,
+    ) -> Union[pd.DataFrame, np.ndarray]:
+        """Scores the performance of solutions in the regularization path at predicting `y_hat` based
         on features in `x`.
 
         Scoring function used is specified by the FitModel.settings #TODO Add sphinx reference to seetings
@@ -568,33 +638,56 @@ class FitModel:
 
         if training:
             coeffs = self.coeff(lambda_0=lambda_0, gamma=gamma, include_intercept=False)
-            l0 = characteristics.get('l0', 0)
-            l1 = characteristics.get('l1', 0)
-            l2 = characteristics.get('l2', 0)
+            l0 = characteristics.get("l0", 0)
+            l1 = characteristics.get("l1", 0)
+            l2 = characteristics.get("l2", 0)
         else:
             coeffs = None
             l0 = 0
             l1 = 0
             l2 = 0
 
-        if self.settings['loss'] == "SquaredError":
-            score = squared_error(y_true=y, y_pred=predictions, coeffs=coeffs, l0=l0, l1=l1, l2=l2, )
-        elif self.settings['loss'] == "Logistic":
-            score = logistic_loss(y_true=y, y_pred=predictions, coeffs=coeffs, l0=l0, l1=l1, l2=l2, )
+        if self.settings["loss"] == "SquaredError":
+            score = squared_error(
+                y_true=y,
+                y_pred=predictions,
+                coeffs=coeffs,
+                l0=l0,
+                l1=l1,
+                l2=l2,
+            )
+        elif self.settings["loss"] == "Logistic":
+            score = logistic_loss(
+                y_true=y,
+                y_pred=predictions,
+                coeffs=coeffs,
+                l0=l0,
+                l1=l1,
+                l2=l2,
+            )
         else:
-            score = squared_hinge_loss(y_true=y, y_pred=predictions, coeffs=coeffs, l0=l0, l1=l1, l2=l2, )
+            score = squared_hinge_loss(
+                y_true=y,
+                y_pred=predictions,
+                coeffs=coeffs,
+                l0=l0,
+                l1=l1,
+                l2=l2,
+            )
 
         if include_characteristics:
-            characteristics[self.settings['loss']] = score
+            characteristics[self.settings["loss"]] = score
             return characteristics
         else:
             return score
 
-    def predict(self,
-                x: np.ndarray,
-                lambda_0: Optional[float] = None,
-                gamma: Optional[float] = None) -> np.ndarray:
-        """ Predicts the response for a given sample.
+    def predict(
+        self,
+        x: np.ndarray,
+        lambda_0: Optional[float] = None,
+        gamma: Optional[float] = None,
+    ) -> np.ndarray:
+        """Predicts the response for a given sample.
 
         Parameters
         ----------
@@ -627,17 +720,17 @@ class FitModel:
             formatted with standard convention:
                 predictions[i, j] refer to predicted response for observation i using coefficients from solution j.
         """
-        coeffs = self.coeff(lambda_0=lambda_0,
-                            gamma=gamma,
-                            include_intercept=self.settings['intercept'])
+        coeffs = self.coeff(
+            lambda_0=lambda_0, gamma=gamma, include_intercept=self.settings["intercept"]
+        )
 
         n = x.shape[0]
-        if self.settings['intercept']:
+        if self.settings["intercept"]:
             x = np.hstack([np.ones((n, 1)), x])
 
         activations = x @ coeffs
 
-        if self.settings['loss'] == "Logistic":
+        if self.settings["loss"] == "Logistic":
             return 1 / (1 + np.exp(-activations))
         else:
             return activations
@@ -665,9 +758,11 @@ class CVFitModel(FitModel):
         gamma_index = int(np.argmin(np.abs(np.asarray(self.gamma) - gamma)))
         f, ax = plt.subplots(**kwargs)
 
-        plt.errorbar(x=self.support_size[gamma_index],
-                     y=self.cv_means[gamma_index],
-                     yerr=self.cv_sds[gamma_index], )
+        plt.errorbar(
+            x=self.support_size[gamma_index],
+            y=self.cv_means[gamma_index],
+            yerr=self.cv_sds[gamma_index],
+        )
 
         plt.ylabel("Cross-Validation Error")
         plt.xlabel("Support Size")
@@ -675,14 +770,15 @@ class CVFitModel(FitModel):
         return ax
 
 
-def gen_synthetic(n: int,
-                  p: int,
-                  k: int,
-                  seed: Optional[int] = None,
-                  rho: float = 0,
-                  b0: float = 0,
-                  snr: float = 1
-                  ) -> Dict[str, Union[float, np.ndarray]]: # pragma: no cover
+def gen_synthetic(
+    n: int,
+    p: int,
+    k: int,
+    seed: Optional[int] = None,
+    rho: float = 0,
+    b0: float = 0,
+    snr: float = 1,
+) -> Dict[str, Union[float, np.ndarray]]:  # pragma: no cover
     """
     Generates a synthetic dataset as follows:
         1) Sample every element in data matrix X from N(0,1).
@@ -743,9 +839,11 @@ def gen_synthetic(n: int,
     return {"X": X, "y": y, "B": B, "e": e, "b0": b0}
 
 
-def cor_matrix(p: int, base_cor: float): # pragma: no cover
+def cor_matrix(p: int, base_cor: float):  # pragma: no cover
     if not (0 < base_cor < 1):
-        raise ValueError(f"Expected base_cor to be a float between 0 and 1 exclusively, but got {base_cor}")
+        raise ValueError(
+            f"Expected base_cor to be a float between 0 and 1 exclusively, but got {base_cor}"
+        )
 
     cor_mat = base_cor * np.ones((p, p))
     pow_mat = abs(np.arange(p) - np.arange(p).reshape(-1, 1))
@@ -753,16 +851,17 @@ def cor_matrix(p: int, base_cor: float): # pragma: no cover
     return np.power(cor_mat, pow_mat)
 
 
-def gen_synthetic_high_corr(n: int,
-                            p: int,
-                            k: int,
-                            seed: Optional[int] = None,
-                            rho: float = 0,
-                            b0: float = 0,
-                            snr: float = 1,
-                            mu: float = 0,
-                            base_cor: float = 0.8,
-                            ) -> Dict[str, Union[float, np.ndarray]]:  # pragma: no cover
+def gen_synthetic_high_corr(
+    n: int,
+    p: int,
+    k: int,
+    seed: Optional[int] = None,
+    rho: float = 0,
+    b0: float = 0,
+    snr: float = 1,
+    mu: float = 0,
+    base_cor: float = 0.8,
+) -> Dict[str, Union[float, np.ndarray]]:  # pragma: no cover
     """
     Generates a synthetic dataset as follows:
         1) Generate a correlation matrix, SIG,  where item [i, j] = base_core^|i-j|.
@@ -814,7 +913,7 @@ def gen_synthetic_high_corr(n: int,
     cor = cor_matrix(p, base_cor)
     X = multivariate_normal(n, mu, cor)
 
-    X[abs(X) < rho] = 0.
+    X[abs(X) < rho] = 0.0
 
     B = np.zeros(p)
     for i in np.round(np.linspace(start=0, stop=p, num=k)).astype(int):
@@ -831,16 +930,17 @@ def gen_synthetic_high_corr(n: int,
     return {"X": X, "y": y, "B": B, "e": e, "b0": b0}
 
 
-def gen_synthetic_logistic(n: int,
-                           p: int,
-                           k: int,
-                           seed: Optional[int] = None,
-                           rho: float = 0,
-                           b0: float = 0,
-                           s: float = 1,
-                           mu: Optional[float] = None,
-                           base_cor: Optional[float] = None,
-                           ) -> Dict[str, Union[float, np.ndarray]]:  # pragma: no cover
+def gen_synthetic_logistic(
+    n: int,
+    p: int,
+    k: int,
+    seed: Optional[int] = None,
+    rho: float = 0,
+    b0: float = 0,
+    s: float = 1,
+    mu: Optional[float] = None,
+    base_cor: Optional[float] = None,
+) -> Dict[str, Union[float, np.ndarray]]:  # pragma: no cover
     """
     Generates a synthetic dataset as follows:
         1) Generate a data matrix, X, drawn from either N(0, 1) (see gen_synthetic) or a multivariate_normal(mu, sigma)
@@ -900,12 +1000,21 @@ def gen_synthetic_logistic(n: int,
     if mu is None and base_cor is None:
         data = gen_synthetic(n=n, p=p, k=k, seed=seed, rho=rho, b0=b0, snr=float("Inf"))
     else:
-        data = gen_synthetic_high_corr(n=n, p=p, k=k, seed=seed, rho=rho, b0=b0, snr=float("Inf"), mu=mu,
-                                       base_cor=base_cor)
+        data = gen_synthetic_high_corr(
+            n=n,
+            p=p,
+            k=k,
+            seed=seed,
+            rho=rho,
+            b0=b0,
+            snr=float("Inf"),
+            mu=mu,
+            base_cor=base_cor,
+        )
 
-    y = binom.rvs(1, 1 / (1 + np.exp(-s * data["X"] @ data['B'])), size=n)
+    y = binom.rvs(1, 1 / (1 + np.exp(-s * data["X"] @ data["B"])), size=n)
 
-    data['y'] = y
-    del data['e']
+    data["y"] = y
+    del data["e"]
 
     return data
