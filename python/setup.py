@@ -11,7 +11,7 @@ from setuptools import Extension, setup, find_packages
 from setuptools.command.build_ext import build_ext
 
 if sys.version_info < (3, 7):
-    sys.exit("Sorry, Only Python 3.6 - 3.9 is supported")
+    sys.exit("Sorry, Only Python 3.7+ is supported")
 
 import io
 import re

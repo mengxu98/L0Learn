@@ -8,9 +8,9 @@ environment:
   matrix:
     # Compilation takes 15-25 minutes on AppVeyor servers
     # so the jobs need to be split
-    - job_name: "python37-x64-macos-mojave-cp36"
+    - job_name: "python37-x64-macos-mojave-cp37"
       APPVEYOR_BUILD_WORKER_IMAGE: macos-mojave
-      CIBW_BUILD: "cp36-*"
+      CIBW_BUILD: "cp37-*"
 
 stack: python 3.7
 
