@@ -16,7 +16,7 @@ stack: python 3.7
 
 install:
   - git submodule init
-  - git submodule update
+  - git submodule update -y
   - python -m pip install cibuildwheel==1.8.0
 
 build_script: | 
