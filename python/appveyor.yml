@@ -1,3 +1,7 @@
+branches:
+  only:
+    - use-carma
+
 skip_non_tags: true
 
 environment:
