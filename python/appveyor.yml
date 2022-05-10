@@ -14,7 +14,10 @@ environment:
 
 stack: python 3.7
 
-install: python -m pip install cibuildwheel==1.8.0
+install:
+  - git submodule init
+  - git submodule update
+  - python -m pip install cibuildwheel==1.8.0
 
 build_script: | 
   cd python
