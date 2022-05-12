@@ -9,12 +9,6 @@ ADD_SUBDIRECTORY(external/carma)
 
 pybind11_add_module(l0learn_core MODULE
         src/l0learn/pyl0learn.cpp
-        src/l0learn/src/CDL012LogisticSwaps.cpp
-        src/l0learn/src/CDL012SquaredHingeSwaps.cpp
-        src/l0learn/src/CDL012Swaps.cpp
-        src/l0learn/src/Grid.cpp
-        src/l0learn/src/Grid1D.cpp
-        src/l0learn/src/Grid2D.cpp
         src/l0learn/src/Normalize.cpp)
 
 target_include_directories(l0learn_core PRIVATE external/carma/)
