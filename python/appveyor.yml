@@ -49,6 +49,9 @@ environment:
 
 stack: python 3.7
 
+init:
+  - cmd: set PATH=C:\Python37;C:\Python37\Scripts;%PATH%
+
 install:
   - git submodule update --init --recursive
   - python -m pip install cibuildwheel==1.8.0
