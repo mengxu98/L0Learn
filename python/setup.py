@@ -71,7 +71,7 @@ class CMakeBuild(build_ext):
             f"-DPYTHON_INCLUDE_DIR={print(get_python_inc())}",
             f"-DPYTHON_LIBRARY={get_config_var('LIBDIR')}",
             f"-DPYTHON3_INCLUDE_DIRS={print(get_python_inc())}",
-            f"-DPYTHON3_LIBRARY={get_config_var('LIBDIR')}",
+            f"-DPYTHON3_LIBRARIES={get_config_var('LIBDIR')}",
         ]
         build_args = []
         # Adding CMake arguments set as environment variable
