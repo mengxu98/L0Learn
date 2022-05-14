@@ -20,8 +20,6 @@ target_include_directories(l0learn_core PRIVATE external/pybind11/)
 target_include_directories(l0learn_core PRIVATE src/l0learn/)
 target_include_directories(l0learn_core PRIVATE src/l0learn/src/include/)
 
-TARGET_LINK_LIBRARIES(l0learn_core PRIVATE carma::carma)
-
 target_compile_definitions(l0learn_core PRIVATE VERSION_INFO=${PROJECT_VERSION})
 
 target_compile_options(l0learn_core PRIVATE -std=c++14)
