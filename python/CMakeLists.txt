@@ -15,7 +15,9 @@ pybind11_add_module(l0learn_core MODULE
         src/l0learn/pyl0learn.cpp
         src/l0learn/src/Normalize.cpp)
 
-target_include_directories(l0learn_core PRIVATE external/carma/)
+TARGET_LINK_LIBRARIES(l0learn_core PUBLIC carma)
+
+target_include_directories(l0learn_core PUBLIC external/carma/)
 target_include_directories(l0learn_core PRIVATE external/pybind11/)
 target_include_directories(l0learn_core PRIVATE src/l0learn/)
 target_include_directories(l0learn_core PRIVATE src/l0learn/src/include/)
