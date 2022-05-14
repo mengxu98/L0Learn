@@ -43,7 +43,7 @@ environment:
       APPVEYOR_BUILD_WORKER_IMAGE: Ubuntu
       CIBW_BUILD: "cp310-*"
 
-  CIBW_BEFORE_ALL_LINUX: "sudo yum install python-devel"
+  CIBW_BEFORE_ALL_LINUX: "yum install python-devel"
   CIBW_BEFORE_TEST: "pip install pytest numpy hypothesis"
   CIBW_TEST_COMMAND: "pytest {package}/tests"
 
