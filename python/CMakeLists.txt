@@ -2,6 +2,10 @@ cmake_minimum_required(VERSION 3.12...3.18)
 set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+SET(Python3_EXECUTABLE ${PYTHON_EXECUTABLE}) # Required for carma!
+SET(Python3_INCLUDE_DIRS ${PYTHON_INCLUDE_DIR}) # Required for carma!
+SET(Python3_LIBRARIES ${PYTHON_LIBRARY}) # Required for carma!
+
 project(l0learn_core VERSION 0.0.2)
 
 ADD_SUBDIRECTORY(external/pybind11)
