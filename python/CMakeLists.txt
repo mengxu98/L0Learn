@@ -2,9 +2,10 @@ cmake_minimum_required(VERSION 3.18)
 set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-SET(Python3_EXECUTABLE ${PYTHON_EXECUTABLE}) # Required for carma!
-SET(Python3_INCLUDE_DIR ${PYTHON_INCLUDE_DIR}) # Required for carma!
-SET(Python3_LIBRARY ${PYTHON_LIBRARY}) # Required for carma!
+#SET(Python3_EXECUTABLE ${PYTHON_EXECUTABLE}) # Required for carma!
+#SET(Python3_INCLUDE_DIR ${PYTHON_INCLUDE_DIR}) # Required for carma!
+#SET(Python3_LIBRARY ${PYTHON_LIBRARY}) # Required for carma!
+#SET(Python3_NUMPY_INCLUDE_DIR ${PYTHON_NUMPY_INCLUDE_DIR}) # Required for carma!
 
 project(l0learn_core VERSION 0.0.2)
 

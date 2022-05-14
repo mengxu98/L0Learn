@@ -69,9 +69,9 @@ class CMakeBuild(build_ext):
             f"-DCMAKE_LIBRARY_OUTPUT_DIRECTORY={extdir}",
             f"-DPYTHON_EXECUTABLE={sys.executable}",
             f"-DCMAKE_BUILD_TYPE={cfg}",  # not used on MSVC, but no harm
-            f"-DPYTHON_INCLUDE_DIR={get_python_inc()}",
-            f"-DPYTHON_LIBRARY={get_config_var('LIBDIR')}",
-            f"-DPYTHON_NUMPY_INCLUDE_DIR={numpy.get_include()}",
+            # f"-DPYTHON_INCLUDE_DIR={print(get_python_inc())}",
+            # f"-DPYTHON_LIBRARY={print(get_config_var('LIBDIR'))}",
+            # f"-DPYTHON_NUMPY_INCLUDE_DIR={print(numpy.get_include())}",
         ]
         build_args = []
         # Adding CMake arguments set as environment variable
