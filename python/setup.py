@@ -19,6 +19,8 @@ import re
 from os.path import dirname
 from os.path import join
 
+import numpy
+
 
 def read(*names, **kwargs):
     with io.open(
@@ -69,6 +71,7 @@ class CMakeBuild(build_ext):
             f"-DCMAKE_BUILD_TYPE={cfg}",  # not used on MSVC, but no harm
             f"-DPYTHON_INCLUDE_DIR={get_python_inc()}",
             f"-DPYTHON_LIBRARY={get_config_var('LIBDIR')}",
+            f"-DPYTHON_NUMPY_INCLUDE_DIR={numpy.get_include()}",
         ]
         build_args = []
         # Adding CMake arguments set as environment variable
