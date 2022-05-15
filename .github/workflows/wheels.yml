@@ -32,8 +32,6 @@ jobs:
         run: |
           cd python
           python -m cibuildwheel --output-dir wheelhouse
-        env:
-          CIBW_BEFORE_ALL_LINUX: yum install python3-devel
 
       - uses: actions/upload-artifact@v2
         with:
