@@ -10,7 +10,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 project(l0learn_core VERSION 0.0.2)
 
 if($ENV{CIBUILDWHEEL})
-    SET(ARMA_USE_LAPACK)
+    target_compile_definitions(armadillo PRIVATE -DARMA_USE_LAPACK)
 endif()
 
 ADD_SUBDIRECTORY(external/pybind11)
