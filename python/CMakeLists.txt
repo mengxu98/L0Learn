@@ -9,22 +9,26 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 project(l0learn_core VERSION 0.0.2)
 
+ADD_SUBDIRECTORY(external/pybind11)
+ADD_SUBDIRECTORY(external/armadillo-code)
+ADD_SUBDIRECTORY(external/carma)
+
 if($ENV{CIBUILDWHEEL})
     target_compile_definitions(armadillo PRIVATE -DARMA_USE_LAPACK)
+    target_compile_definitions(armadillo PRIVATE -DARMA_USE_LAPACK)
 endif()
-
-ADD_SUBDIRECTORY(external/pybind11)
-ADD_SUBDIRECTORY(external/carma)
 
 
 pybind11_add_module(l0learn_core MODULE
         src/l0learn/pyl0learn.cpp
         src/l0learn/src/Normalize.cpp)
 
-TARGET_LINK_LIBRARIES(l0learn_core PUBLIC carma)
+TARGET_LINK_LIBRARIES(l0learn_core PUBLIC armadillo)
+TARGET_LINK_LIBRARIES(l0learn_core PUBLIC carma::carma)
 
-target_include_directories(l0learn_core PUBLIC external/carma/)
 target_include_directories(l0learn_core PRIVATE external/pybind11/)
+target_include_directories(l0learn_core PRIVATE external/armadillo-code/)
+target_include_directories(l0learn_core PRIVATE external/carma/)
 target_include_directories(l0learn_core PRIVATE src/l0learn/)
 target_include_directories(l0learn_core PRIVATE src/l0learn/src/include/)
 
