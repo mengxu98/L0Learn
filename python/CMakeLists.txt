@@ -14,8 +14,8 @@ ADD_SUBDIRECTORY(external/armadillo-code)
 ADD_SUBDIRECTORY(external/carma)
 
 if($ENV{CIBUILDWHEEL})
-    target_compile_definitions(armadillo PRIVATE -DARMA_USE_LAPACK)
-    target_compile_definitions(armadillo PRIVATE -DARMA_USE_LAPACK)
+    target_compile_definitions(armadillo PRIVATE ARMA_USE_LAPACK)
+    target_compile_definitions(armadillo PRIVATE ARMA_USE_BLAS)
 endif()
 
 
