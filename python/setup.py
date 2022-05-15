@@ -9,7 +9,6 @@ import sys
 
 from setuptools import Extension, setup, find_packages
 from setuptools.command.build_ext import build_ext
-from distutils.sysconfig import get_python_inc, get_config_var
 
 if sys.version_info < (3, 7):
     sys.exit("Sorry, Only Python 3.7+ is supported")
@@ -18,8 +17,6 @@ import io
 import re
 from os.path import dirname
 from os.path import join
-
-import numpy
 
 
 def read(*names, **kwargs):
@@ -69,9 +66,6 @@ class CMakeBuild(build_ext):
             f"-DCMAKE_LIBRARY_OUTPUT_DIRECTORY={extdir}",
             f"-DPYTHON_EXECUTABLE={sys.executable}",
             f"-DCMAKE_BUILD_TYPE={cfg}",  # not used on MSVC, but no harm
-            # f"-DPYTHON_INCLUDE_DIR={print(get_python_inc())}",
-            # f"-DPYTHON_LIBRARY={print(get_config_var('LIBDIR'))}",
-            # f"-DPYTHON_NUMPY_INCLUDE_DIR={print(numpy.get_include())}",
         ]
         build_args = []
         # Adding CMake arguments set as environment variable

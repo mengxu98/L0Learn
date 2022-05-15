@@ -9,8 +9,13 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 project(l0learn_core VERSION 0.0.2)
 
+if($ENV{CIBUILDWHEEL})
+    SET(ARMA_USE_LAPACK)
+endif()
+
 ADD_SUBDIRECTORY(external/pybind11)
 ADD_SUBDIRECTORY(external/carma)
+
 
 pybind11_add_module(l0learn_core MODULE
         src/l0learn/pyl0learn.cpp
