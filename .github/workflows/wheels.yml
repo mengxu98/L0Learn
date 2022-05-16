@@ -34,6 +34,8 @@ jobs:
           python -m cibuildwheel --output-dir wheelhouse
         env: 
           CIBW_SKIP: pp*
+          CIBW_BEFORE_TEST: "pip install pytest numpy hypothesis"
+          CIBW_TEST_COMMAND: "pytest {package}/tests"
 
       - uses: actions/upload-artifact@v2
         with:
