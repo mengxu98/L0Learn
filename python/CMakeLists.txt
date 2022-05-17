@@ -17,6 +17,19 @@ PROJECT(
         LANGUAGES CXX
 )
 
+pybind11_add_module(l0learn_core MODULE
+        src/l0learn/pyl0learn.cpp
+        src/l0learn/src/Normalize.cpp)
+
+# Add -fPIC for Armadillo (and OpenBLAS if compiled)
+if(NOT MSVC)
+    # clang on Windows does not support -fPIC
+    if(NOT WIN32)
+        target_compile_options(armadillo PRIVATE -fPIC)
+    endif()
+endif()
+
+
 ADD_SUBDIRECTORY(external/pybind11)
 ADD_SUBDIRECTORY(external/armadillo-code)
 ADD_SUBDIRECTORY(external/carma)
@@ -25,11 +38,6 @@ if($ENV{CIBUILDWHEEL})
     target_compile_definitions(armadillo PRIVATE ARMA_USE_LAPACK)
     target_compile_definitions(armadillo PRIVATE ARMA_USE_BLAS)
 endif()
-
-
-pybind11_add_module(l0learn_core MODULE
-        src/l0learn/pyl0learn.cpp
-        src/l0learn/src/Normalize.cpp)
 
 TARGET_LINK_LIBRARIES(l0learn_core PUBLIC armadillo)
 TARGET_LINK_LIBRARIES(l0learn_core PUBLIC carma)
