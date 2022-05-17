@@ -17,6 +17,10 @@ PROJECT(
         LANGUAGES CXX
 )
 
+ADD_SUBDIRECTORY(external/pybind11)
+ADD_SUBDIRECTORY(external/armadillo-code)
+ADD_SUBDIRECTORY(external/carma)
+
 pybind11_add_module(l0learn_core MODULE
         src/l0learn/pyl0learn.cpp
         src/l0learn/src/Normalize.cpp)
@@ -29,10 +33,6 @@ if(NOT MSVC)
     endif()
 endif()
 
-
-ADD_SUBDIRECTORY(external/pybind11)
-ADD_SUBDIRECTORY(external/armadillo-code)
-ADD_SUBDIRECTORY(external/carma)
 
 if($ENV{CIBUILDWHEEL})
     target_compile_definitions(armadillo PRIVATE ARMA_USE_LAPACK)
