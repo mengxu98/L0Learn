@@ -26,11 +26,13 @@ FULL_VERSION = VERSION
 if DEVELOPMENT:
     FULL_VERSION += '.dev'
 
+
 def read(*names, **kwargs):
     with io.open(
             join(dirname(__file__), *names), encoding=kwargs.get("encoding", "utf8")
     ) as fh:
         return fh.read()
+
 
 def write_version_py(filename: str = 'src/l0learn/version.py') -> None:
     """Write package version to version.py.
@@ -72,14 +74,14 @@ if __name__ == '__main__':
                              re.sub(":[a-z]+:`~?(.*?)`", r"``\1``", read("CHANGELOG.md")),
                          ),
         packages=find_packages(),
-        cmake_install_dir="src/l0learn",
         setup_requires=["setuptools",
                         "wheel",
                         "scikit-build",
                         "cmake",
                         "ninja"],
+        cmake_source_dir="src",
         cmake_args=[
                 f"-DL0LEARN_VERSION_INFO:STRING={VERSION}",
-                f"-DPython3_EXECUTABLE={sys.executable}",
+                f"-DPython3_EXECUTABLE:STRING={sys.executable}",
         ]
     )
