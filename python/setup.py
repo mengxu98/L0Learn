@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 # -*- encoding: utf-8 -*-
 # This was borrowed heavily form https://github.com/RUrlus/diptest/
+import sys
 
 import pybind11
 from setuptools import find_packages
@@ -72,9 +73,13 @@ if __name__ == '__main__':
                          ),
         packages=find_packages(),
         cmake_install_dir="src/l0learn",
+        setup_requires=["setuptools",
+                        "wheel",
+                        "scikit-build",
+                        "cmake",
+                        "ninja"],
         cmake_args=[
-            f"-DL0LEARN_CORE_VERSION_INFO:STRING={VERSION}",
-            f"-Dpybind11_DIR:STRING={pybind11.get_cmake_dir()}",
-            # f"-DCMAKE_INSTALL_PREFIX:PATH=}"
+                f"-DL0LEARN_VERSION_INFO:STRING={VERSION}",
+                f"-DPython3_EXECUTABLE={sys.executable}",
         ]
     )

@@ -2,26 +2,27 @@ cmake_minimum_required(VERSION 3.18)
 set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-# Force static libraries to be built
-set(BUILD_SHARED_LIBS OFF CACHE BOOL "build shared library" FORCE)
-
-
-IF (NOT DEFINED L0LEARN_CORE_VERSION_INFO)
-    SET(L0LEARN_CORE_VERSION_INFO "0.0.0")
+IF (NOT DEFINED L0LEARN_VERSION_INFO)
+    SET(L0LEARN_VERSION_INFO "0.0.0")
 ENDIF ()
 
+INCLUDE(GNUInstallDirs)
+
 PROJECT(
-        l0learn_core
-        VERSION ${L0LEARN_CORE_VERSION_INFO}
+        l0learn
+        VERSION ${L0LEARN_VERSION_INFO}
         DESCRIPTION "Python bindings for L0Learn CD and CDPSI optimization."
         LANGUAGES CXX
 )
+
+# Force static libraries to be built
+set(BUILD_SHARED_LIBS OFF CACHE BOOL "build shared library" FORCE)
 
 ADD_SUBDIRECTORY(external/pybind11)
 ADD_SUBDIRECTORY(external/armadillo-code)
 ADD_SUBDIRECTORY(external/carma)
 
-pybind11_add_module(l0learn_core MODULE
+pybind11_add_module(_l0learn MODULE
         src/l0learn/pyl0learn.cpp
         src/l0learn/src/Normalize.cpp)
 
@@ -39,24 +40,24 @@ if($ENV{CIBUILDWHEEL})
     target_compile_definitions(armadillo PRIVATE ARMA_USE_BLAS)
 endif()
 
-TARGET_LINK_LIBRARIES(l0learn_core PUBLIC armadillo)
-TARGET_LINK_LIBRARIES(l0learn_core PUBLIC carma)
+TARGET_LINK_LIBRARIES(_l0learn PRIVATE armadillo-code)
+TARGET_LINK_LIBRARIES(_l0learn PRIVATE carma::carma)
 
-target_include_directories(l0learn_core PRIVATE external/pybind11/)
-target_include_directories(l0learn_core PRIVATE external/armadillo-code/)
-target_include_directories(l0learn_core PRIVATE external/carma/)
-target_include_directories(l0learn_core PRIVATE src/l0learn/)
-target_include_directories(l0learn_core PRIVATE src/l0learn/src/include/)
+target_include_directories(_l0learn PRIVATE external/pybind11/)
+target_include_directories(_l0learn PRIVATE external/armadillo-code/)
+target_include_directories(_l0learn PRIVATE external/carma/)
+target_include_directories(_l0learn PRIVATE src/l0learn/)
+target_include_directories(_l0learn PRIVATE src/l0learn/src/include/)
 
-target_compile_options(l0learn_core PRIVATE -std=c++14)
+target_compile_options(_l0learn PRIVATE -std=c++14)
 add_link_options(-Wl,--no-undefined)
 # set_target_properties(l0learn_core PROPERTIES OUTPUT_NAME l0learn/l0learn_core)
 
 if(SKBUILD)
-    INSTALL(TARGETS l0learn_core LIBRARY DESTINATION "${PROJECT_NAME}/lib")
+    INSTALL(TARGETS _l0learn LIBRARY DESTINATION "${PROJECT_NAME}/lib")
 ELSE ()
     INSTALL(
-            TARGETS l0learn_core
-            LIBRARY DESTINATION "${PROJECT_SOURCE_DIR}/l0learn_core/lib"
+            TARGETS _l0learn
+            LIBRARY DESTINATION "${PROJECT_SOURCE_DIR}/l0learn/lib"
     )
 ENDIF ()
