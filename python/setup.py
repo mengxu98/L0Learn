@@ -3,9 +3,17 @@
 # This was borrowed heavily form https://github.com/RUrlus/diptest/
 import sys
 
-from setuptools import find_packages
-from skbuild import setup
+try:
+    from skbuild import setup
+except ImportError:
+    print(
+        "Please update pip, you need pip 10 or greater,\n"
+        " or you need to install the PEP 518 requirements in pyproject.toml yourself",
+        file=sys.stderr,
+    )
+    raise
 
+from setuptools import find_packages
 import io
 import re
 from os.path import dirname
@@ -77,8 +85,10 @@ if __name__ == '__main__':
                         "scikit-build",
                         "cmake",
                         "ninja"],
+        cmake_install_dir="l0learn",
         cmake_args=[
                 f"-DL0LEARN_VERSION_INFO:STRING={VERSION}",
+                f"-DPYTHON_EXECUTABLE:STRING={sys.executable}",
                 f"-DPython3_EXECUTABLE:STRING={sys.executable}",
                 f"-DUSE_ARMA_VERSION=10.6.x"
         ]
