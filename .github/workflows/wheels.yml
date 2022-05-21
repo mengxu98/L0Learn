@@ -37,7 +37,8 @@ jobs:
           python -m cibuildwheel --output-dir wheelhouse
         env: 
           CIBW_SKIP: pp*
-          CIBW_BEFORE_ALL: cd external/carma && mkdir build  && cd build  && cmake -DCARMA_INSTALL_LIB=ON .. && cmake --build . --config Release --target install && brew install armadillo
+          CIBW_BEFORE_ALL_MACOS: $INSTALL_CARMA && brew install armadillo
+          CIBW_BEFORE_ALL_LINUX: $INSTALL_CARMA
           CIBW_BEFORE_TEST: "pip install pytest numpy hypothesis"
           CIBW_TEST_COMMAND: "pytest {package}/tests"
 
