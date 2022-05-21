@@ -1,8 +1,7 @@
 from typing import Union, List, Sequence, Dict, Any, Optional
 
-import l0learn
-from l0learn.models import FitModel, CVFitModel
-from l0learn.l0learn_core import (
+from .models import FitModel, CVFitModel
+from ._l0learn import (
     _L0LearnFit_sparse,
     _L0LearnFit_dense,
     _L0LearnCV_dense,
@@ -344,7 +343,7 @@ def fit(
     intercept: bool = True,
     lows: Union[np.ndarray, float] = -float("inf"),
     highs: Union[np.ndarray, float] = +float("inf"),
-) -> l0learn.models.FitModel:
+) -> FitModel:
     """
     Computes the regularization path for the specified loss function and penalty function.
 
@@ -638,7 +637,7 @@ def cvfit(
     intercept: bool = True,
     lows: Union[np.ndarray, float] = -float("inf"),
     highs: Union[np.ndarray, float] = +float("inf"),
-) -> l0learn.models.CVFitModel:
+) -> CVFitModel:
     """Computes the regularization path for the specified loss function and penalty function and performs K-fold
     cross-validation.
 

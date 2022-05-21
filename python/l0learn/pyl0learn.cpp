@@ -83,9 +83,7 @@ py_cvfitmodel L0LearnCV_sparse_wrapper(
       Lows, Highs));
 }
 
-PYBIND11_MODULE(l0learn_core, m) {
-  m.attr("__name__") = "l0learn.l0learn_core";
-
+PYBIND11_MODULE(_l0learn, m) {
   m.def("_L0LearnFit_dense", &L0LearnFit_dense_wrapper);
 
   m.def("_L0LearnFit_sparse", &L0LearnFit_sparse_wrapper);

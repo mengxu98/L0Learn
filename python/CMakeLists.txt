@@ -7,43 +7,32 @@ IF (NOT DEFINED L0LEARN_VERSION_INFO)
 ENDIF ()
 
 PROJECT(
-        l0learn
+        _l0learn
         VERSION ${L0LEARN_VERSION_INFO}
         DESCRIPTION "Python bindings for L0Learn CD and CDPSI optimization."
         LANGUAGES CXX
 )
 
 # Now we can find pybind11
-FIND_PACKAGE(Python3 COMPONENTS Interpreter Development NumPy)
 ADD_SUBDIRECTORY(external/pybind11)
-ADD_SUBDIRECTORY(external/carma)
+FIND_PACKAGE(Python3 COMPONENTS Interpreter Development NumPy)
+FIND_PACKAGE(Armadillo REQUIRED) # Does not build with/without this line
+FIND_PACKAGE(carma CONFIG REQUIRED)
 
-pybind11_add_module(l0learn MODULE
+# ADD_SUBDIRECTORY(external/carma)
+
+
+pybind11_add_module(_l0learn MODULE
         l0learn/pyl0learn.cpp
         l0learn/src/Normalize.cpp)
 
-TARGET_LINK_LIBRARIES(l0learn PRIVATE carma::carma)
+TARGET_LINK_LIBRARIES(_l0learn PRIVATE carma::carma)
 
-target_include_directories(l0learn PRIVATE
+target_include_directories(_l0learn PRIVATE
         "${PROJECT_BINARY_DIR}"
         "${PROJECT_SOURCE_DIR}/external/pybind11/"
         "${PROJECT_SOURCE_DIR}/external/carma/"
         "${PROJECT_SOURCE_DIR}/l0learn/"
         "${PROJECT_SOURCE_DIR}/l0learn/src/include/")
 
-target_compile_options(l0learn PRIVATE -std=c++14)
-add_link_options(-Wl,--no-undefined)
-# set_target_properties(l0learn_core PROPERTIES OUTPUT_NAME l0learn/l0learn_core)
-
-#INCLUDE(GNUInstallDirs REQUIRED)
-#
-#if(SKBUILD)
-#    INSTALL(TARGETS l0learn LIBRARY DESTINATION "${PROJECT_NAME}/lib")
-#ELSE ()
-#    INSTALL(
-#            TARGETS l0learn
-#            LIBRARY DESTINATION "${PROJECT_SOURCE_DIR}/l0learn/lib"
-#    )
-#ENDIF ()
-
-install(TARGETS l0learn DESTINATION .)
+INSTALL(TARGETS _l0learn DESTINATION .)
