@@ -35,7 +35,7 @@ jobs:
         env: 
           CIBW_SKIP: pp*
           CIBW_BEFORE_ALL_MACOS: brew install armadillo
-          CIBW_BEFORE_ALL_LINUX: apt-get install libarmadillo-dev
+          CIBW_BEFORE_ALL_LINUX: sudo yum install armadillo-devel
           CIBW_BEFORE_TEST: "pip install pytest numpy hypothesis"
           CIBW_TEST_COMMAND: "pytest {package}/tests"
 
