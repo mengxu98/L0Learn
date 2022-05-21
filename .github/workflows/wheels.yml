@@ -9,7 +9,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ubuntu-20.04, macOS-10.15] # windows-2019,
+        os: [macOS-10.15] # windows-2019, ubuntu-20.04, ]
         python-version: [3.7, 3.8, 3.9]
 
     steps:
@@ -35,7 +35,6 @@ jobs:
         env: 
           CIBW_SKIP: pp*
           CIBW_BEFORE_ALL_MACOS: brew install armadillo
-          CIBW_BEFORE_ALL_LINUX: sudo yum install armadillo-devel
           CIBW_BEFORE_TEST: "pip install pytest numpy hypothesis"
           CIBW_TEST_COMMAND: "pytest {package}/tests"
 
