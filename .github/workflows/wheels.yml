@@ -39,6 +39,7 @@ jobs:
           CIBW_BEFORE_BUILD: cd external/carma && mkdir build  && cd build  && cmake -DCARMA_INSTALL_LIB=ON .. && cmake --build . --config Release --target install
           CIBW_BEFORE_TEST: "pip install pytest numpy hypothesis"
           CIBW_TEST_COMMAND: "pytest {package}/tests"
+          CIBW_SKIP: "*-win32"
 
       - uses: actions/upload-artifact@v2
         with:
