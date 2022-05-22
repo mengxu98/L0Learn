@@ -12,7 +12,6 @@ jobs:
         include:
           - os: macOS-10.15
           - os: ubuntu-20.04
-            INSTALL_DEVS: 'sudo apt-get install python3-dev'
 
     steps:
       - name: Checkout l0learn
