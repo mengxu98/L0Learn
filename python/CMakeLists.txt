@@ -13,14 +13,14 @@ PROJECT(
         LANGUAGES CXX
 )
 
+set(BUILD_SHARED_LIBS OFF CACHE BOOL "build shared library" FORCE)
+
 # Now we can find pybind11
 ADD_SUBDIRECTORY(external/pybind11)
 FIND_PACKAGE(Python3 COMPONENTS Interpreter Development NumPy)
 ADD_SUBDIRECTORY(external/armadillo-code)
 # FIND_PACKAGE(Armadillo REQUIRED) # Does not build with/without this line
 FIND_PACKAGE(carma CONFIG REQUIRED)
-
-# ADD_SUBDIRECTORY(external/carma)
 
 
 pybind11_add_module(_l0learn MODULE

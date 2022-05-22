@@ -18,6 +18,7 @@ import io
 import re
 from os.path import dirname
 from os.path import join
+from distutils.sysconfig import get_python_inc, get_config_var
 
 PACKAGE_NAME = 'l0learn'
 
@@ -88,8 +89,8 @@ if __name__ == '__main__':
         cmake_install_dir="l0learn",
         cmake_args=[
                 f"-DL0LEARN_VERSION_INFO:STRING={VERSION}",
-                f"-DPYTHON_EXECUTABLE:STRING={sys.executable}",
                 f"-DPython3_EXECUTABLE:STRING={sys.executable}",
-                f"-DUSE_ARMA_VERSION=10.6.x"
+                f"-DPYTHON_INCLUDE_DIR:STRING={get_python_inc()}",
+                f"-DPYTHON_LIBRARY:STRING={get_config_var('LIBDIR')}",
         ]
     )
