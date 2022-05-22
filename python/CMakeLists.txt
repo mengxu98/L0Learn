@@ -27,10 +27,12 @@ pybind11_add_module(_l0learn MODULE
         l0learn/src/Normalize.cpp)
 
 TARGET_LINK_LIBRARIES(_l0learn PRIVATE carma::carma)
+TARGET_LINK_LIBRARIES(_l0learn PRIVATE armadillo)
 
 target_include_directories(_l0learn PRIVATE
         "${PROJECT_BINARY_DIR}"
         "${PROJECT_SOURCE_DIR}/external/pybind11/"
+        "${PROJECT_SOURCE_DIR}/external/armadillo-code/"
         "${PROJECT_SOURCE_DIR}/l0learn/"
         "${PROJECT_SOURCE_DIR}/l0learn/src/include/")
 
