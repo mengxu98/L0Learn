@@ -89,7 +89,7 @@ if __name__ == '__main__':
         cmake_install_dir="l0learn",
         cmake_args=[
                 f"-DL0LEARN_VERSION_INFO:STRING={VERSION}",
-                f"-DPython3_EXECUTABLE:STRING={sys.executable}",
+                f"-DPython3_EXECUTABLE={sys.executable}",
                 f"-DPYTHON3_INCLUDE_DIR:STRING={get_python_inc()}",
                 f"-DPYTHON3_LIBRARY:STRING={get_config_var('LIBDIR')}",
         ]
