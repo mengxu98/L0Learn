@@ -16,7 +16,8 @@ PROJECT(
 # Now we can find pybind11
 ADD_SUBDIRECTORY(external/pybind11)
 FIND_PACKAGE(Python3 COMPONENTS Interpreter Development NumPy)
-FIND_PACKAGE(Armadillo REQUIRED) # Does not build with/without this line
+ADD_SUBDIRECTORY(external/armadillo-code)
+# FIND_PACKAGE(Armadillo REQUIRED) # Does not build with/without this line
 FIND_PACKAGE(carma CONFIG REQUIRED)
 
 # ADD_SUBDIRECTORY(external/carma)
@@ -31,7 +32,6 @@ TARGET_LINK_LIBRARIES(_l0learn PRIVATE carma::carma)
 target_include_directories(_l0learn PRIVATE
         "${PROJECT_BINARY_DIR}"
         "${PROJECT_SOURCE_DIR}/external/pybind11/"
-        "${PROJECT_SOURCE_DIR}/external/carma/"
         "${PROJECT_SOURCE_DIR}/l0learn/"
         "${PROJECT_SOURCE_DIR}/l0learn/src/include/")
 
