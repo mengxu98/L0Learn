@@ -90,7 +90,7 @@ if __name__ == '__main__':
         cmake_args=[
                 f"-DL0LEARN_VERSION_INFO:STRING={VERSION}",
                 f"-DPython3_EXECUTABLE:STRING={sys.executable}",
-                f"-DPYTHON_INCLUDE_DIR:STRING={get_python_inc()}",
-                f"-DPYTHON_LIBRARY:STRING={get_config_var('LIBDIR')}",
+                f"-DPYTHON3_INCLUDE_DIR:STRING={get_python_inc()}",
+                f"-DPYTHON3_LIBRARY:STRING={get_config_var('LIBDIR')}",
         ]
     )
