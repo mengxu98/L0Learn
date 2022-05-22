@@ -11,7 +11,8 @@ jobs:
       matrix:
         include:
           - os: macOS-10.15
-          - os: windows-2019
+          #- os: windows-2019
+          - os: ubuntu-latest
 
     steps:
       - name: Checkout l0learn
