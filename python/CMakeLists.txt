@@ -28,6 +28,10 @@ if($ENV{CIBUILDWHEEL})
     target_compile_definitions(armadillo PRIVATE -DARMA_USE_BLAS)
 endif()
 
+INCLUDE_DIRECTORIES(l0learn)
+INCLUDE_DIRECTORIES(l0learn/src)
+INCLUDE_DIRECTORIES(l0learn/src/include)
+
 pybind11_add_module(${MODNAME} MODULE
         l0learn/pyl0learn.cpp
         l0learn/src/Normalize.cpp)
