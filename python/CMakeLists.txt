@@ -6,8 +6,10 @@ IF (NOT DEFINED L0LEARN_VERSION_INFO)
     SET(L0LEARN_VERSION_INFO "0.0.0")
 ENDIF ()
 
+SET(MODNAME "l0learn")
+
 PROJECT(
-        _l0learn
+        ${MODNAME}
         VERSION ${L0LEARN_VERSION_INFO}
         DESCRIPTION "Python bindings for L0Learn CD and CDPSI optimization."
         LANGUAGES CXX
@@ -15,25 +17,47 @@ PROJECT(
 
 set(BUILD_SHARED_LIBS OFF CACHE BOOL "build shared library" FORCE)
 
-FIND_PACKAGE(Python3 COMPONENTS Interpreter Development.Module NumPy)
 ADD_SUBDIRECTORY(external/pybind11)
 ADD_SUBDIRECTORY(external/armadillo-code)
-# FIND_PACKAGE(Armadillo REQUIRED) # Does not build with/without this line
-FIND_PACKAGE(carma CONFIG REQUIRED)
+ADD_SUBDIRECTORY(external/carma)
 
+# Add Armadillo and pybind11
+if($ENV{CIBUILDWHEEL})
+    set(ALLOW_OPENBLAS_MACOS ON CACHE BOOL "Allow detection of OpenBLAS on macOS" FORCE)
+    target_compile_definitions(armadillo PRIVATE -DARMA_USE_LAPACK)
+    target_compile_definitions(armadillo PRIVATE -DARMA_USE_BLAS)
+endif()
 
-pybind11_add_module(_l0learn MODULE
+pybind11_add_module(${MODNAME} MODULE
         l0learn/pyl0learn.cpp
         l0learn/src/Normalize.cpp)
 
-TARGET_LINK_LIBRARIES(_l0learn PRIVATE carma::carma)
-TARGET_LINK_LIBRARIES(_l0learn PRIVATE armadillo)
+TARGET_LINK_LIBRARIES(${MODNAME} PRIVATE carma::carma)
+TARGET_LINK_LIBRARIES(${MODNAME} PRIVATE armadillo)
 
-target_include_directories(_l0learn PRIVATE
-        "${PROJECT_BINARY_DIR}"
-        "${PROJECT_SOURCE_DIR}/external/pybind11/"
-        "${PROJECT_SOURCE_DIR}/external/armadillo-code/"
-        "${PROJECT_SOURCE_DIR}/l0learn/"
-        "${PROJECT_SOURCE_DIR}/l0learn/src/include/")
+# Add -fPIC for Armadillo (and OpenBLAS if compiled)
+if(NOT MSVC)
+    # clang on Windows does not support -fPIC
+    if(NOT WIN32)
+        target_compile_options(armadillo PRIVATE -fPIC)
+    endif()
+endif()
 
-INSTALL(TARGETS _l0learn DESTINATION .)
+TARGET_INCLUDE_DIRECTORIES(${MODNAME}
+        PUBLIC
+        $<INSTALL_INTERFACE:include>
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+        )
+
+TARGET_COMPILE_OPTIONS(${MODNAME}
+        PUBLIC
+        "$<$<CONFIG:RELEASE>:${PROJECT_RELEASE_FLAGS}>"
+        )
+
+TARGET_COMPILE_DEFINITIONS(${MODNAME}
+        PUBLIC
+        "$<$<CONFIG:RELEASE>:${PROJECT_RELEASE_DEFINITIONS}>"
+        )
+
+
+INSTALL(TARGETS ${MODNAME} DESTINATION .)

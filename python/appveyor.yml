@@ -6,30 +6,30 @@ skip_non_tags: true
 
 environment:
   matrix:
-#    - job_name: "python37-x64-macos-mojave-cp37"
-#      APPVEYOR_BUILD_WORKER_IMAGE: macos-mojave
-#      CIBW_BUILD: "cp37-*"
-#    - job_name: "python37-x64-macos-mojave-cp38"
-#      APPVEYOR_BUILD_WORKER_IMAGE: macos-mojave
-#      CIBW_BUILD: "cp38-*"
-#    - job_name: "python37-x64-macos-mojave-cp39"
-#      APPVEYOR_BUILD_WORKER_IMAGE: macos-mojave
-#      CIBW_BUILD: "cp39-*"
-#    - job_name: "python37-x64-macos-cp310"
-#      APPVEYOR_BUILD_WORKER_IMAGE: macos
-#      CIBW_BUILD: "cp310-*"
-#    - job_name: "python37-x64-vs2015-cp37"
-#      APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2019
-#      CIBW_BUILD: "cp37-*"
-#    - job_name: "python37-x64-vs2015-cp38"
-#      APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2019
-#      CIBW_BUILD: "cp38-*"
-#    - job_name: "python37-x64-vs2015-cp39"
-#      APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2019
-#      CIBW_BUILD: "cp39-*"
-#    - job_name: "python37-x64-vs2015-cp310"
-#      APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2019
-#      CIBW_BUILD: "cp310-*"
+    - job_name: "python37-x64-macos-mojave-cp37"
+      APPVEYOR_BUILD_WORKER_IMAGE: macos-mojave
+      CIBW_BUILD: "cp37-*"
+    - job_name: "python37-x64-macos-mojave-cp38"
+      APPVEYOR_BUILD_WORKER_IMAGE: macos-mojave
+      CIBW_BUILD: "cp38-*"
+    - job_name: "python37-x64-macos-mojave-cp39"
+      APPVEYOR_BUILD_WORKER_IMAGE: macos-mojave
+      CIBW_BUILD: "cp39-*"
+    - job_name: "python37-x64-macos-cp310"
+      APPVEYOR_BUILD_WORKER_IMAGE: macos
+      CIBW_BUILD: "cp310-*"
+    - job_name: "python37-x64-vs2015-cp37"
+      APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2019
+      CIBW_BUILD: "cp37-*"
+    - job_name: "python37-x64-vs2015-cp38"
+      APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2019
+      CIBW_BUILD: "cp38-*"
+    - job_name: "python37-x64-vs2015-cp39"
+      APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2019
+      CIBW_BUILD: "cp39-*"
+    - job_name: "python37-x64-vs2015-cp310"
+      APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2019
+      CIBW_BUILD: "cp310-*"
     - job_name: "python37-x64-ubuntu-cp37"
       APPVEYOR_BUILD_WORKER_IMAGE: Ubuntu
       CIBW_BUILD: "cp37-*"

@@ -1,7 +1,7 @@
 from typing import Union, List, Sequence, Dict, Any, Optional
 
 from .models import FitModel, CVFitModel
-from ._l0learn import (
+from .l0learn import (
     _L0LearnFit_sparse,
     _L0LearnFit_dense,
     _L0LearnCV_dense,
