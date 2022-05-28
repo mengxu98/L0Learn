@@ -71,6 +71,7 @@ if __name__ == '__main__':
     setup(
         name=PACKAGE_NAME,
         version=FULL_VERSION,
+        long_description_content_type="text/markdown",
         long_description="%s\n%s"
                          % (
                              re.compile("^.. start-badges.*^.. end-badges", re.M | re.S).sub(
