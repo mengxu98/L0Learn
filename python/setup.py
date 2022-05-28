@@ -27,8 +27,6 @@ MINOR = 4
 MICRO = 2
 DEVELOPMENT = False
 
-# note: also update README.rst
-
 VERSION = f'{MAJOR}.{MINOR}.{MICRO}'
 FULL_VERSION = VERSION
 if DEVELOPMENT:
