@@ -39,7 +39,7 @@ jobs:
       #     CIBW_ARCHS_MACOS: "x86_64 arm64"
       #     CIBW_BUILD_VERBOSITY: 3
 
-      - run: mkdir -p path/to/artifact
+      - run: mkdir -p python/l0learn-wheelhouse/
 
       - run: echo hello > python/l0learn-wheelhouse/file1.txt
       - run: echo hello > python/l0learn-wheelhouse/file2.txt
