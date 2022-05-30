@@ -7,14 +7,14 @@ import l0learn
 N = 50
 
 
-# @pytest.mark.parametrize("f", [l0learn.fit, l0learn.cvfit])
-# def test_X_sparse_support(f):
-#     x = np.random.random(size=(N, N))
-#     x_sparse = csc_matrix(x)
-#     y = np.random.random(size=(N,))
-#     model_fit = f(x_sparse, y, intercept=False)
-#     assert max(model_fit.support_size[0]) == N
-#
+@pytest.mark.parametrize("f", [l0learn.fit, l0learn.cvfit])
+def test_X_sparse_support(f):
+    x = np.random.random(size=(N, N))
+    x_sparse = csc_matrix(x)
+    y = np.random.random(size=(N,))
+    model_fit = f(x_sparse, y, intercept=False)
+    assert max(model_fit.support_size[0]) == N
+
 
 @pytest.mark.parametrize(
     "x",

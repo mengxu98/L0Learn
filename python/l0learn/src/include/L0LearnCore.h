@@ -139,9 +139,14 @@ fitmodel L0LearnFit(const T &X, const arma::vec &y, const std::string Loss,
                     const std::size_t ExcludeFirstK, const bool Intercept,
                     const bool withBounds, const arma::vec &Lows,
                     const arma::vec &Highs) {
-  // arma::cout << "L0LearnCore.h L0LearnFit Entered.";
-  // arma::cout << "L0LearnCore.h X shape = " << X.n_rows << ", " << X.n_cols <<
-  // "\n"; arma::cout << "L0LearnCore.h y shape = " << y.n_rows << ", " <<
+//   COUT << "L0LearnCore.h L0LearnFit Entered. \n";
+//   COUT << "L0LearnCore.h X shape = " << X.n_rows << ", " << X.n_cols << "\n";
+//   COUT << "L0LearnCore.h y shape = " << y.n_rows << "\n";
+//   std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+//
+////   COUT << "L0LearnCore.h X  = " << X << "\n";
+//   std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+
   // y.n_cols << "\n"; arma::cout << "L0LearnCore.h Lows shape = " <<
   // Lows.n_rows << ", " << Lows.n_cols << "\n"; arma::cout << "L0LearnCore.h
   // Highs shape = " << Highs.n_rows << ", " << Highs.n_cols << "\n";
@@ -176,7 +181,8 @@ fitmodel L0LearnFit(const T &X, const arma::vec &y, const std::string Loss,
     // append the sparse matrix
     Bs[i] = B;
   }
-  // arma::cout << "fitmodel Entering";
+//  COUT << "L0LearnCore.h L0LearnFit Finished. \n";
+//  std::this_thread::sleep_for(std::chrono::milliseconds(1000));
   return fitmodel(G.Lambda0, G.Lambda12, G.NnzCount, Bs, G.Intercepts,
                   G.Converged);
 }

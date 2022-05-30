@@ -8,65 +8,65 @@
 #include "L0LearnCore.h"
 #include "arma_includes.h"
 
-struct sparse_mat {
-  const arma::uvec rowind;
-  const arma::uvec colptr;
-  const arma::vec values;
-  const arma::uword n_rows;
-  const arma::uword n_cols;
+#include <utility>
 
-  explicit sparse_mat(const arma::sp_mat &x)
-      : rowind(arma::uvec(x.row_indices, x.n_elem)),
-        colptr(arma::uvec(x.col_ptrs, x.n_cols + 1)),
-        values(arma::vec(x.values, x.n_elem)),
-        n_rows(x.n_rows),
-        n_cols(x.n_cols) {}
-  sparse_mat(const sparse_mat &x)
-      : rowind(x.rowind),
-        colptr(x.colptr),
-        values(x.values),
-        n_rows(x.n_rows),
-        n_cols(x.n_cols) {}
-  sparse_mat(const arma::uvec &rowind, const arma::uvec &colptr,
-             const arma::vec &values, const arma::uword n_rows,
-             const arma::uword n_cols)
-      : rowind(rowind),
-        colptr(colptr),
-        values(values),
-        n_rows(n_rows),
-        n_cols(n_cols) {}
+//struct sparse_mat {
+//  const arma::uvec rowind;
+//  const arma::uvec colptr;
+//  const arma::vec values;
+//  const arma::uword n_rows;
+//  const arma::uword n_cols;
+//
+//  explicit sparse_mat(const arma::sp_mat &x)
+//      : rowind(arma::uvec(x.row_indices, x.n_elem)),
+//        colptr(arma::uvec(x.col_ptrs, x.n_cols + 1)),
+//        values(arma::vec(x.values, x.n_elem)),
+//        n_rows(x.n_rows),
+//        n_cols(x.n_cols) {}
+////  sparse_mat(const sparse_mat &x)
+////      : rowind(x.rowind),
+////        colptr(x.colptr),
+////        values(x.values),
+////        n_rows(x.n_rows),
+////        n_cols(x.n_cols) {}
+//  sparse_mat(arma::uvec rowind, arma::uvec colptr,
+//             arma::vec values, const arma::uword n_rows,
+//             const arma::uword n_cols)
+//      : rowind(std::move(rowind)),
+//        colptr(std::move(colptr)),
+//        values(std::move(values)),
+//        n_rows(n_rows),
+//        n_cols(n_cols) {
+//    COUT << "rowind/row_indices.size" << this->rowind.size() << " " << arma::sum(this->rowind) <<" \n";
+//    COUT << "colptr/col_ptrs" << this->colptr.size() << " " << arma::sum(this->colptr) <<" \n";
+//    COUT << "values/values" << this->values.size() << " " << arma::sum(this->values) <<" \n";
+//  }
+//
+//  arma::sp_mat to_arma_object() const {
+//    COUT << "to_arma_object begin\n";
+//    COUT << "rowind/row_indices " << this->rowind << "\n";
+//    COUT << "rowind/row_indices.size" << this->rowind.size() << " " << arma::sum(this->rowind) <<" \n";
+//    COUT << "colptr/col_ptrs" << this->colptr.size() << " " << arma::sum(this->colptr) <<" \n";
+//    COUT << "values/values" << this->values.size() << " " << arma::sum(this->values) <<" \n";
+//    COUT << "n_rows/n_rows" << this->n_rows <<" \n";
+//    COUT << "n_cols/n_cols" << this->n_cols <<" \n";
+//    std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+//    return {this->rowind, this->colptr, this->values, this->n_rows,
+//            this->n_cols};
+//  }
+//};
 
-  arma::sp_mat to_arma_object() const {
-    return {this->rowind, this->colptr, this->values, this->n_rows,
-            this->n_cols};
-  }
-};
+py::list col_field_to_list(const arma::field<arma::vec> &x);
 
-std::vector<arma::vec> field_to_vector(const arma::field<arma::vec> &x) {
-  std::vector<arma::vec> return_vector(x.n_elem);
+py::list sparse_field_to_list(const arma::field<arma::sp_mat> &x);
 
-  for (auto i = 0; i < x.n_elem; i++) {
-    return_vector[i] = x[i];
-  }
-  return return_vector;
-}
 
-template <class T1, class T2>
-std::vector<T1> field_to_vector(const arma::field<T2> &x) {
-  std::vector<T1> return_vector;
-  return_vector.reserve(x.n_elem);
-
-  for (auto i = 0; i < x.n_elem; i++) {
-    return_vector.push_back(T1(x[i]));
-  }
-  return return_vector;
-}
 
 struct py_fitmodel {
   std::vector<std::vector<double>> Lambda0;
   std::vector<double> Lambda12;
   std::vector<std::vector<std::size_t>> NnzCount;
-  std::vector<sparse_mat> Beta;
+  py::list Beta;
   std::vector<std::vector<double>> Intercept;
   std::vector<std::vector<bool>> Converged;
 
@@ -74,7 +74,7 @@ struct py_fitmodel {
   py_fitmodel(std::vector<std::vector<double>> &lambda0,
               std::vector<double> &lambda12,
               std::vector<std::vector<std::size_t>> &nnzCount,
-              std::vector<sparse_mat> &beta,
+              py::list &beta,
               std::vector<std::vector<double>> &intercept,
               std::vector<std::vector<bool>> &converged)
       : Lambda0(lambda0),
@@ -88,32 +88,32 @@ struct py_fitmodel {
       : Lambda0(f.Lambda0),
         Lambda12(f.Lambda12),
         NnzCount(f.NnzCount),
-        Beta(field_to_vector<sparse_mat, arma::sp_mat>(f.Beta)),
+        Beta(sparse_field_to_list(f.Beta)),
         Intercept(f.Intercept),
         Converged(f.Converged) {}
 };
 
 struct py_cvfitmodel : py_fitmodel {
-  std::vector<arma::vec> CVMeans;
-  std::vector<arma::vec> CVSDs;
+  py::list CVMeans;
+  py::list CVSDs;
 
   py_cvfitmodel(const py_cvfitmodel &) = default;
 
   py_cvfitmodel(std::vector<std::vector<double>> &lambda0,
                 std::vector<double> &lambda12,
                 std::vector<std::vector<std::size_t>> &nnzCount,
-                std::vector<sparse_mat> &beta,
+                py::list &beta,
                 std::vector<std::vector<double>> &intercept,
                 std::vector<std::vector<bool>> &converged,
-                std::vector<arma::vec> &cVMeans, std::vector<arma::vec> &cVSDs)
+                py::list &cVMeans, py::list &cVSDs)
       : py_fitmodel(lambda0, lambda12, nnzCount, beta, intercept, converged),
         CVMeans(cVMeans),
         CVSDs(cVSDs) {}
 
   explicit py_cvfitmodel(const cvfitmodel &f)
       : py_fitmodel(f),
-        CVMeans(field_to_vector(f.CVMeans)),
-        CVSDs(field_to_vector(f.CVSDs)) {}
+        CVMeans(col_field_to_list(f.CVMeans)),
+        CVSDs(col_field_to_list(f.CVSDs)) {}
 };
 
 #endif  // PYTHON_L0LEARN_CORE_H

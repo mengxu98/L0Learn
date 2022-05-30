@@ -6,7 +6,6 @@ from .l0learn import (
     _L0LearnFit_dense,
     _L0LearnCV_dense,
     _L0LearnCV_sparse,
-    _sparse_mat,
 )
 from scipy.sparse import csc_matrix
 import numpy as np
@@ -16,10 +15,6 @@ SUPPORTED_LOSS = ("SquaredError", "Logistic", "SquaredHinge")
 CLASSIFICATION_LOSS = SUPPORTED_LOSS[1], SUPPORTED_LOSS[2]
 SUPPORTED_PENALTY = ("L0", "L0L1", "L0L2")
 SUPPORTED_ALGORITHM = ("CD", "CDPSI")
-
-
-def as_sparse_mat(x: csc_matrix) -> _sparse_mat:
-    return _sparse_mat(x.indices, x.indptr, x.data, *x.shape)
 
 
 def _fit_check(
@@ -568,9 +563,9 @@ def fit(
             lows,  # const arma::vec &Lows,
             highs,
         )  # const arma::vec &Highs
-    else:  # isinstance(X, csc_matrix)
+    elif isinstance(X, csc_matrix):
         c_results = _L0LearnFit_sparse(
-            as_sparse_mat(X),  # const T &X,
+            X,  # const T &X,
             y,  # const arma::vec &y,
             loss,  # const std::string Loss,
             penalty,  # const std::string Penalty,
@@ -876,9 +871,9 @@ def cvfit(
             lows,
             highs,
         )
-    else:  # isinstance(X, csc_matrix)
+    elif isinstance(X, csc_matrix):
         c_results = _L0LearnCV_sparse(
-            as_sparse_mat(X),
+            X,
             y,
             loss,
             penalty,
