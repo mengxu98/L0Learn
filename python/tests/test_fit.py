@@ -452,3 +452,27 @@ def test_cvfit_num_folds_bad_check(num_folds):
 
     with pytest.raises(ValueError):
         _ = l0learn.cvfit(x, y, num_folds=num_folds)
+
+
+def test_L0_classification_is_actually_L0L2():
+    x = np.random.random(size=(N, N))
+    y = np.zeros(N)
+    y[0] = 1
+    y[1] = 2
+
+
+    result = l0learn.fit(x, y, loss=l0learn.interface.CLASSIFICATION_LOSS)
+
+    assert len(result.gamma) == 1
+    assert result.gamma[0] == 1e-7
+
+
+def test_L0L2_classification_is_actually_L0L2():
+    x = np.random.random(size=(N, N))
+    y = np.zeros(N)
+    y[0] = 1
+    y[1] = 2
+
+    result = l0learn.fit(x, y, loss=l0learn.interface.CLASSIFICATION_LOSS, penalty="L0L2")
+
+    assert len(result.gamma) >= 1
